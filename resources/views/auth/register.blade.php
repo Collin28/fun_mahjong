@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles/style.css">
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 
@@ -22,7 +22,7 @@
 
             <div class="nav-brand">
                 <a href="index.php" class="logo">
-                    <img src="/assets/logo.png" alt="FUN MAHJONG" class="logo-img">
+                    <img src="/images/mahjong.jpeg" alt="FUN MAHJONG" class="logo-img">
                 </a>
             </div>
 

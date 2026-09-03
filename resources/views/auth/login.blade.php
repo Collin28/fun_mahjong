@@ -26,7 +26,7 @@
 
             <div class="nav-brand">
                 <a href="index.php" class="logo">
-                    <img src="/assets/logo.png" alt="FUN MAHJONG" class="logo-img">
+                    <img src="/images/mahjong.jpeg" alt="FUN MAHJONG" class="logo-img">
                 </a>
             </div>
 
@@ -37,27 +37,40 @@
         </nav>
     </header>
 
+    <form>
+
+    </form>
     <section class="hero login-container">
         <div class="login-card">
             <h2 class="login-title">Selamat Datang</h2>
             <p class="login-subtitle">Silakan masuk ke akun Fun Mahjong kamu.</p>
 
-            <form action="" method="POST" class="login-form">
+            <form action="{{ route('login') }}" method="POST" class="login-form">
+                @csrf
+
                 <div class="form-group">
-                    <label>Username / Email</label>
+                    <label>Username</label>
                     <input type="text" name="username" required class="form-input">
+
+                    @error('username')
+                        <span style="color: red; font-size: 14px;">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <div class="form-group">
                     <label>Password</label>
                     <input type="password" name="password" required class="form-input">
+
+                    @error('password')
+                        <span style="color: red; font-size: 14px;">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <button type="submit" class="btn-book btn-login-submit">Masuk</button>
             </form>
 
             <p style="text-align: center; margin-top: 18px; font-size: 0.85rem; color: var(--text-muted);">
-                Belum punya akun? <a href="register.php"
+                Belum punya akun? <a href="register.blade.php"
                     style="color: var(--primary-orange); font-weight: 700; text-decoration: none;">Daftar di sini</a>
             </p>
         </div>
