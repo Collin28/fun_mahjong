@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -46,9 +47,43 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
-    public function showRegistrationForm()
+    public function showRegisterForm()
     {
         return view('auth.register');
+    }
+
+    public function register(Request $request)
+    {
+        // 1. Validasi Input Form
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'username' => ['required', 'string', 'max:255', 'unique:users,username'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'birth_date' => ['required', 'date'],
+            'password' => ['required', 'string', 'min:6',],
+        ], [
+            'username.unique' => 'Username ini sudah digunakan!',
+            'email.unique' => 'Email ini sudah terdaftar!',
+            'password.min' => 'Password minimal 6 karakter!',
+            'password.confirmed' => 'Konfirmasi password tidak cocok!',
+        ]);
+
+        // 2. Simpan Data Baru ke Database SQLite
+        $user = User::create([
+            'name' => $validated['name'],
+            'username' => $validated['username'],
+            'email' => $validated['email'],
+            'birth_date' => $validated['birth_date'],
+            'password' => Hash::make($validated['password']),
+            'role' => 'user', 
+        ]);
+
+        // 3. Otomatis Login Setelah Berhasil Daftar
+        Auth::login($user);
+
+        // 4. Redirect ke Halaman User
+        return redirect()->route('/login')
+            ->with('success', 'Akun berhasil dibuat! Silahkan login akun Anda.');
     }
 
     public function logout(Request $request)

@@ -70,7 +70,7 @@
             </form>
 
             <p style="text-align: center; margin-top: 18px; font-size: 0.85rem; color: var(--text-muted);">
-                Belum punya akun? <a href="register.blade.php"
+                Belum punya akun? <a href="/register"
                     style="color: var(--primary-orange); font-weight: 700; text-decoration: none;">Daftar di sini</a>
             </p>
         </div>
