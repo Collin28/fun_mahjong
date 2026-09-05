@@ -81,9 +81,8 @@ class AuthController extends Controller
         // 3. Otomatis Login Setelah Berhasil Daftar
         Auth::login($user);
 
-        // 4. Redirect ke Halaman User
-        return redirect()->route('/login')
-            ->with('success', 'Akun berhasil dibuat! Silahkan login akun Anda.');
+        // 4. Redirect ke Halaman Login
+        return redirect('/login')->with('success', 'Registrasi berhasil! Silakan login.');
     }
 
     public function logout(Request $request)

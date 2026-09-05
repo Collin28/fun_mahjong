@@ -4,34 +4,27 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 
 class AdminController extends Controller
 {
     /**
-     * Menampilkan halaman dashboard / data semua user
+     * Dashboard Utama
      */
     public function index()
     {
         $users = User::all()->map(function ($user) {
-            // Path avatar sesuai spesifikasi: /assets/profile/username.png
             $user->profile_picture = asset("assets/profile/{$user->username}.png");
-            
-            // Cek apakah user ulang tahun hari ini
             $user->is_birthday = Carbon::parse($user->birth_date)->isBirthday();
-            
             return $user;
         });
 
-        // Jika menggunakan Blade View:
         return view('admin.dashboard', compact('users'));
-
-        // Jika menggunakan API (Vue / React / Fetch JS):
-        // return response()->json(['success' => true, 'data' => $users]);
     }
 
     /**
-     * Tambah Poin / Kemenangan & Auto-Sort
+     * Tambah Poin / Kemenangan
      */
     public function addPoint(Request $request)
     {
@@ -41,12 +34,9 @@ class AdminController extends Controller
         ]);
 
         $user = User::findOrFail($request->user_id);
-        
-        // Tambahkan poin ke total_wins dan weekly_wins
         $user->increment('total_wins', $request->points);
         $user->increment('weekly_wins', $request->points);
 
-        // Ambil data leaderboard terbaru (otomatis terurut dari poin terbesar)
         $leaderboard = User::orderBy('total_wins', 'desc')->get();
 
         return response()->json([
@@ -56,55 +46,112 @@ class AdminController extends Controller
         ]);
     }
 
-    /**
-     * Filter Leaderboard berdasarkan Kategori (Daily, Weekly, Top Player, Top Loyal)
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | MANAGE USERS (Disesuaikan dengan folder admin/users/)
+    |--------------------------------------------------------------------------
+    */
+
+    // READ ALL: Tampilkan tabel daftar user
+    public function manageUsersIndex()
+    {
+        $users = User::all();
+        // Mengarahkan ke resources/views/admin/users/index.blade.php
+        return view('admin.users.index', compact('users'));
+    }
+
+    // SHOW: Tampilkan detail user
+    public function manageUsersShow($id)
+    {
+        $user = User::findOrFail($id);
+        // Mengarahkan ke resources/views/admin/users/show.blade.php
+        return view('admin.users.show', compact('user'));
+    }
+
+    // UPDATE FORM: Tampilkan form edit user (opsional jika pakai halaman terpisah)
+    public function manageUsersEdit($id)
+    {
+        $user = User::findOrFail($id);
+        // Mengarahkan ke resources/views/admin/users/update.blade.php
+        return view('admin.users.edit', compact('user'));
+    }
+
+    // UPDATE PROCESS: Proses pembaruan data user
+    public function manageUsersUpdate(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        $request->validate([
+            'name'       => ['required', 'string', 'max:255'],
+            'username'   => ['required', 'string', 'max:255', 'unique:users,username,' . $id],
+            'email'      => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $id],
+            'birth_date' => ['required', 'date'],
+            'password'   => ['nullable', 'string', 'min:6'],
+        ]);
+
+        $data = [
+            'name'       => $request->name,
+            'username'   => $request->username,
+            'email'      => $request->email,
+            'birth_date' => $request->birth_date,
+        ];
+
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->password);
+        }
+
+        $user->update($data);
+
+        return redirect()->route('admin.users.index')->with('success', 'Data user berhasil diperbarui!');
+    }
+
+    // DELETE: Hapus user
+    public function manageUsersDestroy($id)
+    {
+        $user = User::findOrFail($id);
+        $user->delete();
+
+        return redirect()->route('admin.users.index')->with('success', 'User berhasil dihapus!');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | FITUR LEADERBOARD
+    |--------------------------------------------------------------------------
+    */
+
     public function getLeaderboard(Request $request)
     {
         $type = $request->query('type', 'top_player');
-
         $query = User::query();
 
         switch ($type) {
             case 'top_loyal':
-                // Urutan paling sering main
                 $query->orderBy('total_played', 'desc');
                 break;
-
             case 'weekly':
-                // Filter 7 hari ke belakang / berdasarkan weekly_wins
                 $query->where('updated_at', '>=', Carbon::now()->subDays(7))
-                      ->orderBy('weekly_wins', 'desc');
+                    ->orderBy('weekly_wins', 'desc');
                 break;
-
             case 'daily':
-                // Filter 1 hari terakhir
                 $query->where('updated_at', '>=', Carbon::now()->subDay())
-                      ->orderBy('weekly_wins', 'desc');
+                    ->orderBy('weekly_wins', 'desc');
                 break;
-
             case 'top_player':
             default:
-                // Urutan paling banyak menang (All-Time)
                 $query->orderBy('total_wins', 'desc');
                 break;
         }
 
-        $leaderboard = $query->get();
-
         return response()->json([
             'success' => true,
             'type'    => $type,
-            'data'    => $leaderboard
+            'data'    => $query->get()
         ]);
     }
 
-    /**
-     * Reset Leaderboard Periodik (Sistem Rentang 7 Hari)
-     */
     public function resetWeeklyLeaderboard()
     {
-        // Reset poin mingguan menjadi 0
         User::query()->update(['weekly_wins' => 0]);
 
         return response()->json([

@@ -9,6 +9,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+//Admin
 Route::prefix('admin')->group(function () {
 
     Route::get('/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
@@ -20,9 +21,33 @@ Route::prefix('admin')->group(function () {
     Route::post('/leaderboard/reset', [AdminController::class, 'resetWeeklyLeaderboard'])->name('admin.reset-leaderboard');
 });
 
+
+
+//Manage User (Admin Page)
+Route::prefix('admin')->name('admin.')->group(function () {
+
+    // Prefix Khusus Manage Users
+    Route::prefix('users')->name('users.')->group(function () {
+        Route::get('/', [AdminController::class, 'manageUsersIndex'])->name('index');
+
+        Route::get('/{id}', [AdminController::class, 'manageUsersShow'])->name('show');
+
+        Route::get('/{id}/edit', [AdminController::class, 'manageUsersEdit'])->name('edit');
+
+        Route::put('/{id}', [AdminController::class, 'manageUsersUpdate'])->name('update');
+        
+        Route::delete('/{id}', [AdminController::class, 'manageUsersDestroy'])->name('destroy');
+    });
+
+});
+
+
+
+//User
 Route::prefix('user')->group(function () {
     Route::get('/dashboard', [UserController::class, 'index'])->name('user.dashboard');
 });
+
 
 //Auth
 Route::middleware('guest')->group(function () {
