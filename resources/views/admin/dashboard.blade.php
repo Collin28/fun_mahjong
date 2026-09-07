@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Admin - Fun Mahjong</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
     <style>
         :root {
             --sidebar-width: 240px;
@@ -20,8 +23,19 @@
             --text-muted: #7d6e5d;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
-        body { background-color: var(--bg-light); color: var(--text-dark); display: flex; min-height: 100vh; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            display: flex;
+            min-height: 100vh;
+        }
 
         /* SIDEBAR */
         .sidebar {
@@ -29,16 +43,20 @@
             background-color: #ffffff;
             border-right: 1px solid var(--border-soft);
             position: fixed;
-            top: 0; bottom: 0; left: 0;
+            top: 0;
+            bottom: 0;
+            left: 0;
             display: flex;
             flex-direction: column;
             z-index: 100;
         }
+
         .sidebar-brand {
             padding: 24px 20px;
             text-align: center;
             border-bottom: 1px solid var(--border-soft);
         }
+
         .sidebar-brand h1 {
             font-family: 'Playfair Display', serif;
             font-size: 1.4rem;
@@ -46,10 +64,23 @@
             letter-spacing: 1px;
             line-height: 1.2;
         }
-        .sidebar-brand p { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
-        
-        .sidebar-menu { list-style: none; padding: 20px 12px; flex-grow: 1; }
-        .sidebar-menu li { margin-bottom: 6px; }
+
+        .sidebar-brand p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 20px 12px;
+            flex-grow: 1;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 6px;
+        }
+
         .sidebar-menu a {
             display: block;
             padding: 12px 16px;
@@ -60,7 +91,9 @@
             font-size: 0.9rem;
             transition: all 0.2s;
         }
-        .sidebar-menu a.active, .sidebar-menu a:hover {
+
+        .sidebar-menu a.active,
+        .sidebar-menu a:hover {
             background-color: #fff4eb;
             color: var(--orange-primary);
         }
@@ -98,20 +131,37 @@
             justify-content: space-between;
             border-bottom: 1px solid var(--border-soft);
         }
-        .topbar h3 { font-size: 1rem; font-weight: 700; color: var(--text-dark); }
-        .user-profile { display: flex; align-items: center; gap: 10px; }
+
+        .topbar h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
         .avatar-admin {
-            width: 36px; height: 36px;
+            width: 36px;
+            height: 36px;
             background-color: #f1e3d3;
             color: var(--orange-primary);
             border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
             border: 1px solid var(--orange-primary);
         }
 
         /* CONTENT AREA */
-        .content { padding: 30px; }
+        .content {
+            padding: 30px;
+        }
 
         .page-title {
             font-family: 'Playfair Display', Georgia, serif;
@@ -144,7 +194,7 @@
             border: 1px solid var(--border-soft);
             border-radius: 12px;
             padding: 24px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
         }
 
         .card-box h3 {
@@ -245,14 +295,6 @@
             gap: 12px;
         }
 
-        .avatar-img {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background-color: #eee;
-            object-fit: cover;
-        }
-
         .badge-ultah {
             background-color: #ffe3e3;
             color: #d63031;
@@ -274,6 +316,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <!-- SIDEBAR LEFT -->
@@ -291,16 +334,17 @@
         </ul>
 
         <form action="{{ route('logout') }}" method="POST">
+            @csrf
             <button class="btn-logout">
-            🚪 Logout
-        </button>
+                🚪 Logout
+            </button>
         </form>
-        
+
     </aside>
 
     <!-- MAIN WRAPPER -->
     <div class="main-wrapper">
-        
+
         <!-- TOPBAR -->
         <header class="topbar">
             <h3>Dashboard Admin</h3>
@@ -316,28 +360,34 @@
 
             <!-- BANNER INFORMASI AUTO RESET -->
             <div class="info-box">
-                <strong>Sistem Auto-Reset:</strong> Peringkat leaderboard otomatis diurutkan berdasarkan poin tertinggi. System mengecek rentang waktu dari <strong>03/09/2026</strong> hingga <strong>10/09/2026</strong> (7 Hari kedepan).
+                <strong>Sistem Auto-Reset:</strong> Peringkat leaderboard otomatis diurutkan berdasarkan poin tertinggi.
+                System mengecek rentang waktu dari <strong>03/09/2026</strong> hingga <strong>10/09/2026</strong> (7
+                Hari kedepan).
             </div>
+
+            <!-- DATALIST UNTUK SEARCH USER (Bisa dipakai oleh kedua form) -->
+            <datalist id="user-search-list">
+                @foreach($users as $user)
+                    <option value="{{ $user->username }}">{{ $user->name }}</option>
+                @endforeach
+            </datalist>
 
             <!-- HALAMAN INPUT TERPISAH (POIN DAN MATCH) -->
             <div class="forms-grid">
-                
+
                 <!-- CARD 1: INPUT TAMBAH POIN -->
                 <div class="card-box">
                     <h3>🏆 Tambah Poin (Kemenangan)</h3>
-                    <form onsubmit="event.preventDefault();">
+                    <form action="#" method="POST">
+                        @csrf
                         <div class="form-group">
-                            <label>Pilih User</label>
-                            <select class="form-control">
-                                <option value="">budi_mahjong (Budi Santoso)</option>
-                                <option value="">siti_pro (Siti Aminah)</option>
-                                <option value="">ahmad_dragon (Ahmad)</option>
-                            </select>
+                            <label>Cari User (Nama / Username)</label>
+                            <input type="text" name="player_username" list="user-search-list" class="form-control" placeholder="Ketik nama atau username..." autocomplete="off" required>
                         </div>
 
                         <div class="form-group">
                             <label>Tambah Point / Kemenangan</label>
-                            <input type="number" class="form-control" placeholder="Contoh: 10">
+                            <input type="number" name="points" class="form-control" placeholder="Contoh: 10" required>
                         </div>
 
                         <button type="submit" class="btn-submit">Tambah Point & Auto Sort</button>
@@ -347,19 +397,16 @@
                 <!-- CARD 2: INPUT TAMBAH MATCH -->
                 <div class="card-box">
                     <h3>🀄 Tambah Match (Sering Main)</h3>
-                    <form onsubmit="event.preventDefault();">
+                    <form action="{{ route('admin.add-match') }}" method="POST">
+                        @csrf
                         <div class="form-group">
-                            <label>Pilih User</label>
-                            <select class="form-control">
-                                <option value="">budi_mahjong (Budi Santoso)</option>
-                                <option value="">siti_pro (Siti Aminah)</option>
-                                <option value="">ahmad_dragon (Ahmad)</option>
-                            </select>
+                            <label>Cari User (Nama / Username)</label>
+                            <input type="text" name="username" list="user-search-list" class="form-control" placeholder="Ketik nama atau username..." autocomplete="off" required>
                         </div>
 
                         <div class="form-group">
                             <label>Tambah Total Permainan (Match)</label>
-                            <input type="number" class="form-control" placeholder="Contoh: 1">
+                            <input type="number" name="total_played" class="form-control" placeholder="Contoh: 1" required>
                         </div>
 
                         <button type="submit" class="btn-submit" style="background-color: #2c5e43;">Tambah Match (Top Loyal)</button>
@@ -380,7 +427,7 @@
                     <a href="#" class="nav-tab-item">Top Loyal (Sering Main)</a>
                 </div>
 
-                <!-- TABEL USER STATIS -->
+                <!-- TABEL USER -->
                 <table class="table-leaderboard">
                     <thead>
                         <tr>
@@ -394,48 +441,47 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td><strong>#1</strong></td>
-                            <td>
-                                <div class="user-profile-cell">
-                                    <div class="avatar-img" style="background-image: url('https://via.placeholder.com/36'); background-size: cover;"></div>
-                                    <span><strong>Budi Santoso</strong></span>
-                                </div>
-                            </td>
-                            <td>budi_mahjong</td>
-                            <td>12/10/1995</td>
-                            <td><strong>145 Menang</strong></td>
-                            <td>210 Main</td>
-                            <td><a href="#" class="btn-edit">Edit</a></td>
-                        </tr>
-                        <tr>
-                            <td><strong>#2</strong></td>
-                            <td>
-                                <div class="user-profile-cell">
-                                    <div class="avatar-img" style="background-image: url('https://via.placeholder.com/36'); background-size: cover;"></div>
-                                    <span><strong>Siti Aminah</strong></span>
-                                </div>
-                            </td>
-                            <td>siti_pro</td>
-                            <td>03/09/1998 <span class="badge-ultah">🎉 Hari Ini!</span></td>
-                            <td><strong>120 Menang</strong></td>
-                            <td>180 Main</td>
-                            <td><a href="#" class="btn-edit">Edit</a></td>
-                        </tr>
-                        <tr>
-                            <td><strong>#3</strong></td>
-                            <td>
-                                <div class="user-profile-cell">
-                                    <div class="avatar-img" style="background-image: url('https://via.placeholder.com/36'); background-size: cover;"></div>
-                                    <span><strong>Ahmad Raihan</strong></span>
-                                </div>
-                            </td>
-                            <td>ahmad_dragon</td>
-                            <td>20/01/2000</td>
-                            <td><strong>98 Menang</strong></td>
-                            <td>150 Main</td>
-                            <td><a href="#" class="btn-edit">Edit</a></td>
-                        </tr>
+                        @forelse($users as $user)
+                            <tr>
+                                <!-- Nomor Urut / Ranking -->
+                                <td><strong>#{{ $loop->iteration }}</strong></td>
+
+                                <!-- Avatar Inisial -->
+                                <td>
+                                    <div class="user-profile-cell">
+                                        <div class="avatar-img"
+                                            style="background-color: #1E5235; color: #F59E0B; font-weight: bold; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%;">
+                                            {{ strtoupper(substr($user->name ?? $user->username, 0, 2)) }}
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <!-- Username -->
+                                <td>{{ $user->username }}</td>
+
+                                <!-- Tanggal Lahir -->
+                                <td>
+                                    {{ $user->birth_date ? \Carbon\Carbon::parse($user->birth_date)->format('d/m/Y') : '-' }}
+                                </td>
+
+                                <!-- Total Kemenangan -->
+                                <td><strong>{{ $user->total_wins ?? 0 }} Menang</strong></td>
+
+                                <!-- Total Permainan -->
+                                <td>{{ $user->daily_played ?? 0 }} Main</td>
+
+                                <!-- Tombol Edit -->
+                                <td>
+                                    <a href="{{ route('admin.users.edit', $user->id) }}" class="btn-edit">Edit</a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="7" style="text-align: center; color: #888; padding: 20px;">
+                                    Belum ada data user.
+                                </td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
 
@@ -445,4 +491,5 @@
     </div>
 
 </body>
+
 </html>

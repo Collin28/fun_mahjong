@@ -10,7 +10,7 @@ class UserController extends Controller
 {
     public function index()
     {
-        $users = User::all();
+        $users = User::where('role', 'user')->latest()->get();
         
         return view('user.dashboard', compact('users'));
 

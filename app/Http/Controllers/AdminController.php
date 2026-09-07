@@ -9,12 +9,10 @@ use Carbon\Carbon;
 
 class AdminController extends Controller
 {
-    /**
-     * Dashboard Utama
-     */
+    //main dashboard
     public function index()
     {
-        $users = User::all()->map(function ($user) {
+        $users = User::where('role', 'user')->latest()->get()->map(function ($user) {
             $user->profile_picture = asset("assets/profile/{$user->username}.png");
             $user->is_birthday = Carbon::parse($user->birth_date)->isBirthday();
             return $user;
@@ -23,40 +21,63 @@ class AdminController extends Controller
         return view('admin.dashboard', compact('users'));
     }
 
-    /**
-     * Tambah Poin / Kemenangan
-     */
-    public function addPoint(Request $request)
+    //add poin
+    // public function addPoint(Request $request)
+    // {
+    //     $request->validate([
+    //         'username' => 'required|string|exists:users,username',
+    //         'points' => 'required|integer|min:1',
+    //     ], [
+    //         'username.exists' => 'Username tersebut tidak ditemukan.',
+    //     ]);
+
+    //     $user = User::where('username', $request->player_username)->firstOrFail();
+    //     $user->increment('total_wins', $request->points);
+
+    //     return redirect()->route('admin.dashboard')
+    //         ->with('success', "Poin kemenangan (+{$request->points}) berhasil ditambahkan ke {$user->username}.");
+    // }
+
+    //add match 
+    public function addMatch(Request $request)
     {
+        // 1. Validasi Input
         $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'points'  => 'required|integer|min:1',
+            'username' => 'required|string',
+            'total_played' => 'required|integer|min:1',
+        ], [
+            'username.required' => 'Username player wajib diisi.',
+            'total_played.required' => 'Jumlah match wajib diisi.',
+            'total_played.min' => 'Jumlah match minimal adalah 1.',
         ]);
 
-        $user = User::findOrFail($request->user_id);
-        $user->increment('total_wins', $request->points);
-        $user->increment('weekly_wins', $request->points);
+        // 2. Cari User
+        $user = User::where('username', $request->username)
+            ->orWhere('name', $request->username)
+            ->first();
 
-        $leaderboard = User::orderBy('total_wins', 'desc')->get();
+        if (!$user) {
+            return redirect()->back()->withErrors(['username' => 'Player tidak ditemukan di database.']);
+        }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Poin berhasil ditambahkan!',
-            'data'    => $leaderboard
-        ]);
+        // 3. Tambahkan Nilai ke Daily, Weekly, dan Total Match
+        // (Sesuaikan nama kolom di bawah dengan yang ada di database kamu)
+        $user->daily_played = ($user->daily_played ?? 0) + $request->total_played;
+        $user->weekly_played = ($user->weekly_played ?? 0) + $request->total_played;
+        $user->total_played = ($user->total_played ?? 0) + $request->total_played;
+
+        // 4. Simpan ke Database
+        $user->save();
+
+        return redirect()->route('admin.dashboard')
+            ->with('success', "Berhasil menambahkan {$request->total_played} match (Daily, Weekly & Total) untuk @{$user->username}.");
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | MANAGE USERS (Disesuaikan dengan folder admin/users/)
-    |--------------------------------------------------------------------------
-    */
-
-    // READ ALL: Tampilkan tabel daftar user
+    //Manager Users
     public function manageUsersIndex()
     {
-        $users = User::all();
-        // Mengarahkan ke resources/views/admin/users/index.blade.php
+        $users = User::where('role', 'user')->latest()->get();
+
         return view('admin.users.index', compact('users'));
     }
 
@@ -82,17 +103,17 @@ class AdminController extends Controller
         $user = User::findOrFail($id);
 
         $request->validate([
-            'name'       => ['required', 'string', 'max:255'],
-            'username'   => ['required', 'string', 'max:255', 'unique:users,username,' . $id],
-            'email'      => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $id],
+            'name' => ['required', 'string', 'max:255'],
+            'username' => ['required', 'string', 'max:255', 'unique:users,username,' . $id],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $id],
             'birth_date' => ['required', 'date'],
-            'password'   => ['nullable', 'string', 'min:6'],
+            'password' => ['nullable', 'string', 'min:6'],
         ]);
 
         $data = [
-            'name'       => $request->name,
-            'username'   => $request->username,
-            'email'      => $request->email,
+            'name' => $request->name,
+            'username' => $request->username,
+            'email' => $request->email,
             'birth_date' => $request->birth_date,
         ];
 
@@ -112,51 +133,5 @@ class AdminController extends Controller
         $user->delete();
 
         return redirect()->route('admin.users.index')->with('success', 'User berhasil dihapus!');
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | FITUR LEADERBOARD
-    |--------------------------------------------------------------------------
-    */
-
-    public function getLeaderboard(Request $request)
-    {
-        $type = $request->query('type', 'top_player');
-        $query = User::query();
-
-        switch ($type) {
-            case 'top_loyal':
-                $query->orderBy('total_played', 'desc');
-                break;
-            case 'weekly':
-                $query->where('updated_at', '>=', Carbon::now()->subDays(7))
-                    ->orderBy('weekly_wins', 'desc');
-                break;
-            case 'daily':
-                $query->where('updated_at', '>=', Carbon::now()->subDay())
-                    ->orderBy('weekly_wins', 'desc');
-                break;
-            case 'top_player':
-            default:
-                $query->orderBy('total_wins', 'desc');
-                break;
-        }
-
-        return response()->json([
-            'success' => true,
-            'type'    => $type,
-            'data'    => $query->get()
-        ]);
-    }
-
-    public function resetWeeklyLeaderboard()
-    {
-        User::query()->update(['weekly_wins' => 0]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Leaderboard mingguan berhasil di-reset!'
-        ]);
     }
 }

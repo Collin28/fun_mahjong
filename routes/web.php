@@ -14,11 +14,10 @@ Route::prefix('admin')->group(function () {
 
     Route::get('/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
 
-    Route::post('/leaderboard/add-point', [AdminController::class, 'addPoint'])->name('admin.add-point');
+    Route::post('/add-point', [AdminController::class, 'addPoint'])->name('admin.add-point');
+    Route::post('/add-match', [AdminController::class, 'addMatch'])->name('admin.add-match');
 
-    Route::get('/leaderboard/data', [AdminController::class, 'getLeaderboard'])->name('admin.leaderboard-data');
-
-    Route::post('/leaderboard/reset', [AdminController::class, 'resetWeeklyLeaderboard'])->name('admin.reset-leaderboard');
+    Route::post('/reset', [AdminController::class, 'resetWeeklyLeaderboard'])->name('admin.reset-leaderboard');
 });
 
 
@@ -35,7 +34,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/{id}/edit', [AdminController::class, 'manageUsersEdit'])->name('edit');
 
         Route::put('/{id}', [AdminController::class, 'manageUsersUpdate'])->name('update');
-        
+
         Route::delete('/{id}', [AdminController::class, 'manageUsersDestroy'])->name('destroy');
     });
 

@@ -40,6 +40,10 @@ class User extends Authenticatable
         'role', 
         'total_wins',
         'weekly_wins',
+        'daily_played',
+        'weekly_played',
         'total_played',
+        'last_daily_reset',
+        'last_weekly_reset',
     ];
 }
