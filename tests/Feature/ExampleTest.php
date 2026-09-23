@@ -2,11 +2,15 @@
 
 namespace Tests\Feature;
 
-// use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
+    // The home page now reads the leaderboard from the users table,
+    // so the schema has to exist for this request to succeed.
+    use RefreshDatabase;
+
     /**
      * A basic test example.
      */

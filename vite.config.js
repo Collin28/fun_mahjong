@@ -1,20 +1,18 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
-import { bunny } from 'laravel-vite-plugin/fonts';
-import tailwindcss from '@tailwindcss/vite';
 
+// The Blade layouts load `public/css/style.css` directly and do not use @vite,
+// so JS is the only bundled entry. Tailwind and the Bunny font plugin were
+// configured but unused, and the CSS entry pointed at a file that never existed.
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js'],
-            refresh: true,
-            fonts: [
-                bunny('Instrument Sans', {
-                    weights: [400, 500, 600],
-                }),
+            input: ['resources/js/app.js'],
+            refresh: [
+                'resources/views/**',
+                'public/css/style.css',
             ],
         }),
-        tailwindcss(),
     ],
     server: {
         watch: {

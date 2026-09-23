@@ -1,28 +1,28 @@
 <?php
 
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PublicController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Public
+Route::get('/', [PublicController::class, 'index'])->name('home');
+Route::get('/about-us', [PublicController::class, 'about'])->name('about');
 
-//Admin
+// Admin
 Route::prefix('admin')->group(function () {
 
     Route::get('/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
 
+    Route::post('/adjust-stat', [AdminController::class, 'adjustStat'])->name('admin.adjust-stat');
     Route::post('/add-point', [AdminController::class, 'addPoint'])->name('admin.add-point');
     Route::post('/add-match', [AdminController::class, 'addMatch'])->name('admin.add-match');
 
     Route::post('/reset', [AdminController::class, 'resetWeeklyLeaderboard'])->name('admin.reset-leaderboard');
 });
 
-
-
-//Manage User (Admin Page)
+// Manage User (Admin Page)
 Route::prefix('admin')->name('admin.')->group(function () {
 
     // Prefix Khusus Manage Users
@@ -40,15 +40,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 });
 
-
-
-//User
+// User
 Route::prefix('user')->group(function () {
     Route::get('/dashboard', [UserController::class, 'index'])->name('user.dashboard');
 });
 
-
-//Auth
+// Auth
 Route::middleware('guest')->group(function () {
     // Tampilan Form Login & Register
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -71,5 +68,3 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // URL: /admin/dashboard | Nama Route: admin.dashboard
     Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
 });
-
-

@@ -1,495 +1,203 @@
-<!DOCTYPE html>
-<html lang="id">
+@extends('layouts.admin')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Admin - Fun Mahjong</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
-        rel="stylesheet">
+@section('title', 'Dashboard Admin - Fun Mahjong')
+@section('topbar-title', 'Dashboard Admin')
 
-    <style>
-        :root {
-            --sidebar-width: 240px;
-            --orange-primary: #d95d1e;
-            --orange-hover: #b84c14;
-            --bg-light: #fbf9f6;
-            --bg-card: #ffffff;
-            --border-soft: #f1e3d3;
-            --text-dark: #2b1d0c;
-            --text-muted: #7d6e5d;
-        }
+@section('content')
+    <h1 class="page-title">Teknikal Leaderboard</h1>
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-        }
+    @if(session('success'))
+        <div class="alert-success" role="status">
+            <span aria-hidden="true">&#x2705;</span> {{ session('success') }}
+        </div>
+    @endif
 
-        body {
-            background-color: var(--bg-light);
-            color: var(--text-dark);
-            display: flex;
-            min-height: 100vh;
-        }
+    @if(isset($errors) && $errors->any())
+        <div class="alert-error" role="alert">
+            <span aria-hidden="true">&#x26A0;&#xFE0F;</span> {{ $errors->first() }}
+        </div>
+    @endif
 
-        /* SIDEBAR */
-        .sidebar {
-            width: var(--sidebar-width);
-            background-color: #ffffff;
-            border-right: 1px solid var(--border-soft);
-            position: fixed;
-            top: 0;
-            bottom: 0;
-            left: 0;
-            display: flex;
-            flex-direction: column;
-            z-index: 100;
-        }
-
-        .sidebar-brand {
-            padding: 24px 20px;
-            text-align: center;
-            border-bottom: 1px solid var(--border-soft);
-        }
-
-        .sidebar-brand h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.4rem;
-            color: var(--orange-primary);
-            letter-spacing: 1px;
-            line-height: 1.2;
-        }
-
-        .sidebar-brand p {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-top: 4px;
-        }
-
-        .sidebar-menu {
-            list-style: none;
-            padding: 20px 12px;
-            flex-grow: 1;
-        }
-
-        .sidebar-menu li {
-            margin-bottom: 6px;
-        }
-
-        .sidebar-menu a {
-            display: block;
-            padding: 12px 16px;
-            color: var(--text-dark);
-            text-decoration: none;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            transition: all 0.2s;
-        }
-
-        .sidebar-menu a.active,
-        .sidebar-menu a:hover {
-            background-color: #fff4eb;
-            color: var(--orange-primary);
-        }
-
-        .btn-logout {
-            padding: 12px 16px;
-            color: #d63031;
-            text-decoration: none;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border: 1px solid #fab1a0;
-            border-radius: 6px;
-            margin: 20px 12px;
-            background: #fff;
-            cursor: pointer;
-        }
-
-        /* MAIN WRAPPER */
-        .main-wrapper {
-            margin-left: var(--sidebar-width);
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* TOPBAR */
-        .topbar {
-            height: 65px;
-            background: #fff;
-            padding: 0 30px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid var(--border-soft);
-        }
-
-        .topbar h3 {
-            font-size: 1rem;
-            font-weight: 700;
-            color: var(--text-dark);
-        }
-
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .avatar-admin {
-            width: 36px;
-            height: 36px;
-            background-color: #f1e3d3;
-            color: var(--orange-primary);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 0.85rem;
-            border: 1px solid var(--orange-primary);
-        }
-
-        /* CONTENT AREA */
-        .content {
-            padding: 30px;
-        }
-
-        .page-title {
-            font-family: 'Playfair Display', Georgia, serif;
-            font-size: 1.6rem;
-            color: var(--text-dark);
-            margin-bottom: 15px;
-        }
-
-        /* NOTIFIKASI AUTO RESET */
-        .info-box {
-            background-color: #fff9f2;
-            border: 1px dashed #e6aa68;
-            padding: 14px 18px;
-            border-radius: 8px;
-            font-size: 0.88rem;
-            color: #6b4311;
-            margin-bottom: 25px;
-        }
-
-        /* GRID DUA FORM (POIN & MATCH) */
-        .forms-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .card-box {
-            background: var(--bg-card);
-            border: 1px solid var(--border-soft);
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
-        }
-
-        .card-box h3 {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.2rem;
-            margin-bottom: 15px;
-            color: var(--text-dark);
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            font-weight: 600;
-            font-size: 0.85rem;
-            color: #4a3b2c;
-        }
-
-        .form-control {
-            padding: 10px 14px;
-            border: 1px solid #dcd0c0;
-            border-radius: 6px;
-            outline: none;
-            font-size: 0.9rem;
-        }
-
-        .form-control:focus {
-            border-color: var(--orange-primary);
-        }
-
-        .btn-submit {
-            background-color: var(--orange-primary);
-            color: #fff;
-            border: none;
-            padding: 11px 18px;
-            border-radius: 6px;
-            font-weight: 700;
-            cursor: pointer;
-            width: 100%;
-            transition: 0.2s;
-        }
-
-        .btn-submit:hover {
-            background-color: var(--orange-hover);
-        }
-
-        /* NAV TABS LEADERBOARD */
-        .nav-tabs {
-            display: flex;
-            gap: 20px;
-            border-bottom: 2px solid var(--border-soft);
-            margin-bottom: 20px;
-        }
-
-        .nav-tab-item {
-            padding: 10px 15px;
-            text-decoration: none;
-            color: var(--text-muted);
-            font-weight: 600;
-            font-size: 0.95rem;
-            border-bottom: 3px solid transparent;
-            margin-bottom: -2px;
-        }
-
-        .nav-tab-item.active {
-            color: var(--orange-primary);
-            border-bottom-color: var(--orange-primary);
-        }
-
-        /* TABLE LEADERBOARD */
-        .table-leaderboard {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-        }
-
-        .table-leaderboard th {
-            background-color: #fff8f0;
-            padding: 12px;
-            color: #5c4731;
-            font-size: 0.85rem;
-            border-bottom: 1px solid var(--border-soft);
-        }
-
-        .table-leaderboard td {
-            padding: 14px 12px;
-            border-bottom: 1px solid #f5ede4;
-            font-size: 0.9rem;
-        }
-
-        .user-profile-cell {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .badge-ultah {
-            background-color: #ffe3e3;
-            color: #d63031;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            margin-left: 6px;
-        }
-
-        .btn-edit {
-            background-color: var(--orange-primary);
-            color: #fff;
-            padding: 6px 14px;
-            border-radius: 4px;
-            text-decoration: none;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-    </style>
-</head>
-
-<body>
-
-    <!-- SIDEBAR LEFT -->
-    <aside class="sidebar">
-        <div class="sidebar-brand">
-            <h1>FUN<br>MAHJONG</h1>
-            <p>Admin Control Panel</p>
+    <!-- PERIODE MINGGUAN BERJALAN + RESET MANUAL -->
+    <div class="reset-bar">
+        <div class="info-box">
+            <strong>Periode mingguan berjalan:</strong>
+            <strong>{{ $weekStart->format('d/m/Y') }}</strong> sampai <strong>{{ $weekEnd->format('d/m/Y') }}</strong>.
+            Peringkat diurutkan otomatis dari nilai tertinggi. Reset mingguan dijalankan manual lewat tombol di samping.
         </div>
 
-        <ul class="sidebar-menu">
-            <li><a href="#" class="active">Daftar Users</a></li>
-            <li><a href="/admin/users/">Manage Users</a></li>
-            <li><a href="#">Leaderboard</a></li>
-            <li><a href="#">Pengaturan System</a></li>
-        </ul>
-
-        <form action="{{ route('logout') }}" method="POST">
+        <form action="{{ route('admin.reset-leaderboard') }}" method="POST" onsubmit="return confirm('Yakin ingin me-reset leaderboard mingguan? Seluruh weekly_played dan weekly_wins akan kembali ke 0.');">
             @csrf
-            <button class="btn-logout">
-                🚪 Logout
+            <button type="submit" class="btn-submit btn-submit-danger btn-reset">
+                <span aria-hidden="true">&#x21BB;</span> Reset Leaderboard
             </button>
         </form>
-
-    </aside>
-
-    <!-- MAIN WRAPPER -->
-    <div class="main-wrapper">
-
-        <!-- TOPBAR -->
-        <header class="topbar">
-            <h3>Dashboard Admin</h3>
-            <div class="user-profile">
-                <div class="avatar-admin">Adm</div>
-                <span style="font-weight: 600; font-size: 0.9rem;">Administrator</span>
-            </div>
-        </header>
-
-        <!-- MAIN CONTENT -->
-        <main class="content">
-            <h2 class="page-title">Teknikal Leaderboard</h2>
-
-            <!-- BANNER INFORMASI AUTO RESET -->
-            <div class="info-box">
-                <strong>Sistem Auto-Reset:</strong> Peringkat leaderboard otomatis diurutkan berdasarkan poin tertinggi.
-                System mengecek rentang waktu dari <strong>03/09/2026</strong> hingga <strong>10/09/2026</strong> (7
-                Hari kedepan).
-            </div>
-
-            <!-- DATALIST UNTUK SEARCH USER (Bisa dipakai oleh kedua form) -->
-            <datalist id="user-search-list">
-                @foreach($users as $user)
-                    <option value="{{ $user->username }}">{{ $user->name }}</option>
-                @endforeach
-            </datalist>
-
-            <!-- HALAMAN INPUT TERPISAH (POIN DAN MATCH) -->
-            <div class="forms-grid">
-
-                <!-- CARD 1: INPUT TAMBAH POIN -->
-                <div class="card-box">
-                    <h3>🏆 Tambah Poin (Kemenangan)</h3>
-                    <form action="#" method="POST">
-                        @csrf
-                        <div class="form-group">
-                            <label>Cari User (Nama / Username)</label>
-                            <input type="text" name="player_username" list="user-search-list" class="form-control" placeholder="Ketik nama atau username..." autocomplete="off" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Tambah Point / Kemenangan</label>
-                            <input type="number" name="points" class="form-control" placeholder="Contoh: 10" required>
-                        </div>
-
-                        <button type="submit" class="btn-submit">Tambah Point & Auto Sort</button>
-                    </form>
-                </div>
-
-                <!-- CARD 2: INPUT TAMBAH MATCH -->
-                <div class="card-box">
-                    <h3>🀄 Tambah Match (Sering Main)</h3>
-                    <form action="{{ route('admin.add-match') }}" method="POST">
-                        @csrf
-                        <div class="form-group">
-                            <label>Cari User (Nama / Username)</label>
-                            <input type="text" name="username" list="user-search-list" class="form-control" placeholder="Ketik nama atau username..." autocomplete="off" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Tambah Total Permainan (Match)</label>
-                            <input type="number" name="total_played" class="form-control" placeholder="Contoh: 1" required>
-                        </div>
-
-                        <button type="submit" class="btn-submit" style="background-color: #2c5e43;">Tambah Match (Top Loyal)</button>
-                    </form>
-                </div>
-
-            </div>
-
-            <!-- DATA LEADERBOARD & USER -->
-            <h2 class="page-title">Data Leaderboard & User</h2>
-
-            <div class="card-box">
-                <!-- TABULASI PERINGKAT -->
-                <div class="nav-tabs">
-                    <a href="#" class="nav-tab-item active">Daily</a>
-                    <a href="#" class="nav-tab-item">Weekly</a>
-                    <a href="#" class="nav-tab-item">Top Player (Kemenangan)</a>
-                    <a href="#" class="nav-tab-item">Top Loyal (Sering Main)</a>
-                </div>
-
-                <!-- TABEL USER -->
-                <table class="table-leaderboard">
-                    <thead>
-                        <tr>
-                            <th>Rank</th>
-                            <th>User Profile</th>
-                            <th>Username</th>
-                            <th>TTL / Ultah</th>
-                            <th>Total Kemenangan</th>
-                            <th>Total Permainan</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($users as $user)
-                            <tr>
-                                <!-- Nomor Urut / Ranking -->
-                                <td><strong>#{{ $loop->iteration }}</strong></td>
-
-                                <!-- Avatar Inisial -->
-                                <td>
-                                    <div class="user-profile-cell">
-                                        <div class="avatar-img"
-                                            style="background-color: #1E5235; color: #F59E0B; font-weight: bold; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%;">
-                                            {{ strtoupper(substr($user->name ?? $user->username, 0, 2)) }}
-                                        </div>
-                                    </div>
-                                </td>
-
-                                <!-- Username -->
-                                <td>{{ $user->username }}</td>
-
-                                <!-- Tanggal Lahir -->
-                                <td>
-                                    {{ $user->birth_date ? \Carbon\Carbon::parse($user->birth_date)->format('d/m/Y') : '-' }}
-                                </td>
-
-                                <!-- Total Kemenangan -->
-                                <td><strong>{{ $user->total_wins ?? 0 }} Menang</strong></td>
-
-                                <!-- Total Permainan -->
-                                <td>{{ $user->daily_played ?? 0 }} Main</td>
-
-                                <!-- Tombol Edit -->
-                                <td>
-                                    <a href="{{ route('admin.users.edit', $user->id) }}" class="btn-edit">Edit</a>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="7" style="text-align: center; color: #888; padding: 20px;">
-                                    Belum ada data user.
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-
-            </div>
-
-        </main>
     </div>
 
-</body>
+    <!-- DATA LEADERBOARD & USER -->
+    <h2 class="page-title">Data Leaderboard &amp; User</h2>
 
-</html>
+    <div class="card-box">
+        <!-- TABULASI PERINGKAT -->
+        <div class="nav-tabs" role="tablist" aria-label="Kategori leaderboard">
+            <button type="button" class="nav-tab-item active" role="tab" id="tabbtn-daily" aria-controls="tab-daily" aria-selected="true" data-tab="daily">Daily</button>
+            <button type="button" class="nav-tab-item" role="tab" id="tabbtn-weekly" aria-controls="tab-weekly" aria-selected="false" tabindex="-1" data-tab="weekly">Weekly</button>
+            <button type="button" class="nav-tab-item" role="tab" id="tabbtn-top-player" aria-controls="tab-top-player" aria-selected="false" tabindex="-1" data-tab="top-player">Top Player (Total Menang)</button>
+            <button type="button" class="nav-tab-item" role="tab" id="tabbtn-top-loyal" aria-controls="tab-top-loyal" aria-selected="false" tabindex="-1" data-tab="top-loyal">Top Loyal (Sering Main)</button>
+        </div>
+
+        <!-- PANEL TABEL: DAILY -->
+        <div class="tab-panel active" id="tab-daily" role="tabpanel" aria-labelledby="tabbtn-daily" tabindex="0">
+            @include('admin.partials.leaderboard-table', ['users' => $dailyUsers, 'metricLabel' => 'Main Hari Ini', 'metricKey' => 'daily_played', 'suffix' => 'Main', 'caption' => 'Peringkat harian berdasarkan jumlah match hari ini'])
+        </div>
+
+        <!-- PANEL TABEL: WEEKLY -->
+        <div class="tab-panel" id="tab-weekly" role="tabpanel" aria-labelledby="tabbtn-weekly" tabindex="0" hidden>
+            @include('admin.partials.leaderboard-table', ['users' => $weeklyUsers, 'metricLabel' => 'Main Minggu Ini', 'metricKey' => 'weekly_played', 'suffix' => 'Main', 'caption' => 'Peringkat mingguan berdasarkan jumlah match minggu ini'])
+        </div>
+
+        <!-- PANEL TABEL: TOP PLAYER (KEMENANGAN) -->
+        <div class="tab-panel" id="tab-top-player" role="tabpanel" aria-labelledby="tabbtn-top-player" tabindex="0" hidden>
+            @include('admin.partials.leaderboard-table', ['users' => $topPlayers, 'metricLabel' => 'Total Kemenangan', 'metricKey' => 'total_wins', 'suffix' => 'Menang', 'hideMetric' => true, 'caption' => 'Peringkat berdasarkan total poin kemenangan'])
+        </div>
+
+        <!-- PANEL TABEL: TOP LOYAL (SERING MAIN) -->
+        <div class="tab-panel" id="tab-top-loyal" role="tabpanel" aria-labelledby="tabbtn-top-loyal" tabindex="0" hidden>
+            @include('admin.partials.leaderboard-table', ['users' => $topLoyal, 'metricLabel' => 'Total Permainan', 'metricKey' => 'total_played', 'suffix' => 'Main', 'caption' => 'Peringkat berdasarkan total sesi bermain'])
+        </div>
+    </div>
+
+    <!-- Feedback untuk aksi stepper (+/-) -->
+    <div class="stat-feedback" id="stat-feedback" role="status" aria-live="polite" hidden></div>
+@endsection
+
+@section('scripts')
+    <script>
+        (function () {
+            // ---- TABS ----
+            var tabs = Array.prototype.slice.call(document.querySelectorAll('.nav-tab-item[role="tab"]'));
+
+            function activateTab(name, setFocus) {
+                tabs.forEach(function (t) {
+                    var selected = t.dataset.tab === name;
+                    var panel = document.getElementById(t.getAttribute('aria-controls'));
+
+                    t.classList.toggle('active', selected);
+                    t.setAttribute('aria-selected', selected ? 'true' : 'false');
+                    t.setAttribute('tabindex', selected ? '0' : '-1');
+
+                    if (panel) {
+                        panel.classList.toggle('active', selected);
+                        panel.hidden = !selected;
+                    }
+
+                    if (selected && setFocus) t.focus();
+                });
+            }
+
+            var initial = window.location.hash.replace('#', '') || 'daily';
+            if (document.getElementById('tab-' + initial)) {
+                activateTab(initial, false);
+            }
+
+            tabs.forEach(function (tab) {
+                tab.addEventListener('click', function () {
+                    history.replaceState(null, '', '#' + tab.dataset.tab);
+                    activateTab(tab.dataset.tab, false);
+                });
+            });
+
+            var tablist = document.querySelector('.nav-tabs[role="tablist"]');
+            if (tablist) {
+                tablist.addEventListener('keydown', function (e) {
+                    var current = tabs.indexOf(document.activeElement);
+                    if (current === -1) return;
+
+                    var next;
+                    if (e.key === 'ArrowRight') next = (current + 1) % tabs.length;
+                    else if (e.key === 'ArrowLeft') next = (current - 1 + tabs.length) % tabs.length;
+                    else if (e.key === 'Home') next = 0;
+                    else if (e.key === 'End') next = tabs.length - 1;
+                    else return;
+
+                    e.preventDefault();
+                    history.replaceState(null, '', '#' + tabs[next].dataset.tab);
+                    activateTab(tabs[next].dataset.tab, true);
+                });
+            }
+
+            // ---- STEPPER ----
+            var csrfToken = document.querySelector('meta[name="csrf-token"]');
+            var feedback = document.getElementById('stat-feedback');
+            var feedbackTimer;
+
+            function notify(message, kind) {
+                if (!feedback) return;
+                feedback.textContent = message;
+                feedback.className = 'stat-feedback stat-feedback-' + kind;
+                feedback.hidden = false;
+
+                window.clearTimeout(feedbackTimer);
+                feedbackTimer = window.setTimeout(function () {
+                    feedback.hidden = true;
+                }, 4000);
+            }
+
+            // The same user can appear in several tab panels, so update every
+            // matching cell instead of reloading the whole page.
+            function syncUser(username, values) {
+                Object.keys(values).forEach(function (field) {
+                    var selector = '[data-username="' + CSS.escape(username) + '"] [data-field="' + field + '"]';
+                    document.querySelectorAll(selector).forEach(function (cell) {
+                        cell.textContent = values[field];
+                        cell.classList.remove('is-updated');
+                        void cell.offsetWidth;
+                        cell.classList.add('is-updated');
+                    });
+                });
+            }
+
+            document.querySelectorAll('.step-btn').forEach(function (btn) {
+                btn.addEventListener('click', async function () {
+                    var username = btn.dataset.username;
+                    var group = btn.dataset.group;
+                    var delta = Number(btn.dataset.delta);
+                    if (!username) return;
+
+                    var row = btn.closest('[data-username]');
+                    var rowButtons = row ? row.querySelectorAll('.step-btn') : [btn];
+                    var counters = row ? row.querySelectorAll('.step-counter') : [];
+
+                    rowButtons.forEach(function (b) { b.disabled = true; });
+                    counters.forEach(function (c) { c.classList.add('is-busy'); });
+
+                    try {
+                        var res = await fetch('{{ route('admin.adjust-stat') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken ? csrfToken.content : ''
+                            },
+                            body: JSON.stringify({ username: username, group: group, delta: delta })
+                        });
+
+                        var data = await res.json().catch(function () { return {}; });
+
+                        if (res.ok) {
+                            syncUser(username, data);
+                            notify('Data ' + username + ' diperbarui.', 'success');
+                        } else {
+                            notify(data.error || 'Gagal mengubah data.', 'error');
+                        }
+                    } catch (err) {
+                        notify('Koneksi bermasalah. Coba lagi.', 'error');
+                    } finally {
+                        rowButtons.forEach(function (b) { b.disabled = false; });
+                        counters.forEach(function (c) { c.classList.remove('is-busy'); });
+                    }
+                });
+            });
+        })();
+    </script>
+@endsection

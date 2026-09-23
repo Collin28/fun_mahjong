@@ -1,81 +1,73 @@
-<!DOCTYPE html>
-<html lang="id">
+@extends('layouts.public')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Masuk - FUN MAHJONG</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="/css/style.css">
-</head>
+@section('title', 'Masuk - FUN MAHJONG')
+@section('meta-description', 'Masuk ke akun Fun Mahjong kamu untuk melihat statistik permainan dan posisi di papan peringkat.')
 
-<body>
-
-    <header class="header">
-        <nav class="navbar">
-            <ul class="nav-left">
-                <li><a href="index.php">Beranda</a></li>
-                <li><a href="index.php#leaderboard">Papan Peringkat</a></li>
-                <li><a href="index.php#rules">Aturan</a></li>
-                <li><a href="about-us.php">Tentang Kami</a></li>
-            </ul>
-
-            <div class="nav-brand">
-                <a href="index.php" class="logo">
-                    <img src="/images/mahjong.jpeg" alt="FUN MAHJONG" class="logo-img">
-                </a>
-            </div>
-
-            <div class="nav-right">
-                <a href="login.php" class="nav-link active">Masuk</a>
-                <a href="https://lynk.id/fun_mahjong" class="btn-book">Pesan Permainan</a>
-            </div>
-        </nav>
-    </header>
-
-    <form>
-
-    </form>
+@section('content')
     <section class="hero login-container">
         <div class="login-card">
-            <h2 class="login-title">Selamat Datang</h2>
+            <h1 class="login-title">Selamat Datang</h1>
             <p class="login-subtitle">Silakan masuk ke akun Fun Mahjong kamu.</p>
+
+            @if(session('success'))
+                <div class="form-alert form-alert-success" role="status">
+                    <span class="form-alert-icon" aria-hidden="true">✓</span>
+                    <p>{{ session('success') }}</p>
+                </div>
+            @endif
+
+            @if($errors->any())
+                <div class="form-alert form-alert-error" role="alert">
+                    <span class="form-alert-icon" aria-hidden="true">!</span>
+                    <div>
+                        <p class="form-alert-title">Gagal masuk</p>
+                        <ul class="form-alert-list">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+            @endif
 
             <form action="{{ route('login') }}" method="POST" class="login-form">
                 @csrf
 
                 <div class="form-group">
-                    <label>Username</label>
-                    <input type="text" name="username" required class="form-input">
-
-                    @error('username')
-                        <span style="color: red; font-size: 14px;">{{ $message }}</span>
-                    @enderror
+                    <label for="username">Username</label>
+                    <input
+                        type="text"
+                        name="username"
+                        id="username"
+                        value="{{ old('username') }}"
+                        required
+                        autocomplete="username"
+                        autocapitalize="none"
+                        spellcheck="false"
+                        class="form-input"
+                        @error('username') aria-invalid="true" @enderror
+                        placeholder="Masukkan username">
                 </div>
 
                 <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" name="password" required class="form-input">
-
-                    @error('password')
-                        <span style="color: red; font-size: 14px;">{{ $message }}</span>
-                    @enderror
+                    <label for="password">Password</label>
+                    <input
+                        type="password"
+                        name="password"
+                        id="password"
+                        required
+                        autocomplete="current-password"
+                        class="form-input"
+                        @error('password') aria-invalid="true" @enderror
+                        placeholder="Masukkan password">
                 </div>
 
                 <button type="submit" class="btn-book btn-login-submit">Masuk</button>
             </form>
 
-            <p style="text-align: center; margin-top: 18px; font-size: 0.85rem; color: var(--text-muted);">
-                Belum punya akun? <a href="/register"
-                    style="color: var(--primary-orange); font-weight: 700; text-decoration: none;">Daftar di sini</a>
+            <p class="login-alt-action">
+                Belum punya akun? <a href="{{ route('register') }}">Daftar di sini</a>
             </p>
         </div>
     </section>
-
-</body>
-
-</html>
+@endsection

@@ -20,7 +20,6 @@ class AuthController extends Controller
             'password.required' => 'Password wajib diisi!',
         ]);
 
-
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
@@ -38,7 +37,7 @@ class AuthController extends Controller
         // 4. Jika Login Gagal
         return back()->withErrors([
             'username' => 'Username yang Anda masukkan salah.',
-            'password' => 'Password yang Anda masukkan salah.'
+            'password' => 'Password yang Anda masukkan salah.',
         ])->onlyInput('username');
     }
 
@@ -59,8 +58,9 @@ class AuthController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:255', 'unique:users,username'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'birth_date' => ['required', 'date'],
-            'password' => ['required', 'string', 'min:6',],
+            'birth_month' => ['required', 'integer', 'between:1,12'],
+            'birth_day' => ['required', 'integer', 'between:1,31'],
+            'password' => ['required', 'string', 'min:6'],
         ], [
             'username.unique' => 'Username ini sudah digunakan!',
             'email.unique' => 'Email ini sudah terdaftar!',
@@ -68,21 +68,28 @@ class AuthController extends Controller
             'password.confirmed' => 'Konfirmasi password tidak cocok!',
         ]);
 
+        if (! checkdate($validated['birth_month'], $validated['birth_day'], 2000)) {
+            return back()->withErrors(['birth_day' => 'Tanggal lahir tidak valid.'])->withInput();
+        }
+
+        $animals = ['panda', 'tiger', 'fox', 'cat', 'rabbit', 'bear', 'koala', 'penguin'];
+
         // 2. Simpan Data Baru ke Database SQLite
         $user = User::create([
             'name' => $validated['name'],
             'username' => $validated['username'],
             'email' => $validated['email'],
-            'birth_date' => $validated['birth_date'],
+            'birth_date' => sprintf('%04d-%02d-%02d', 2000, $validated['birth_month'], $validated['birth_day']),
+            'profile_picture' => $animals[random_int(0, count($animals) - 1)],
             'password' => Hash::make($validated['password']),
-            'role' => 'user', 
+            'role' => 'user',
         ]);
 
         // 3. Otomatis Login Setelah Berhasil Daftar
         Auth::login($user);
+        $request->session()->regenerate();
 
-        // 4. Redirect ke Halaman Login
-        return redirect('/login')->with('success', 'Registrasi berhasil! Silakan login.');
+        return redirect()->route('user.dashboard')->with('success', 'Registrasi berhasil! Selamat datang di Fun Mahjong.');
     }
 
     public function logout(Request $request)
