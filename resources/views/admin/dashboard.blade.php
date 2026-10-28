@@ -22,11 +22,12 @@
     <div class="reset-bar">
         <div class="info-box">
             <strong>Periode mingguan berjalan:</strong>
-            <strong>{{ $weekStart->format('d/m/Y') }}</strong> sampai <strong>{{ $weekEnd->format('d/m/Y') }}</strong>.
+            <strong>{{ $weekStart->format('d/m/Y') }}</strong> sampai <strong>{{$weekEnd->format('d/m/Y') }}</strong>.
             Peringkat diurutkan otomatis dari nilai tertinggi. Reset mingguan dijalankan manual lewat tombol di samping.
         </div>
 
-        <form action="{{ route('admin.reset-leaderboard') }}" method="POST" onsubmit="return confirm('Yakin ingin me-reset leaderboard mingguan? Seluruh weekly_played dan weekly_wins akan kembali ke 0.');">
+        <form action="{{ route('admin.reset-leaderboard') }}" method="POST"
+            onsubmit="return confirm('Yakin ingin me-reset leaderboard mingguan? Seluruh weekly_played dan weekly_wins akan kembali ke 0.');">
             @csrf
             <button type="submit" class="btn-submit btn-submit-danger btn-reset">
                 <span aria-hidden="true">&#x21BB;</span> Reset Leaderboard
@@ -40,10 +41,14 @@
     <div class="card-box">
         <!-- TABULASI PERINGKAT -->
         <div class="nav-tabs" role="tablist" aria-label="Kategori leaderboard">
-            <button type="button" class="nav-tab-item active" role="tab" id="tabbtn-daily" aria-controls="tab-daily" aria-selected="true" data-tab="daily">Daily</button>
-            <button type="button" class="nav-tab-item" role="tab" id="tabbtn-weekly" aria-controls="tab-weekly" aria-selected="false" tabindex="-1" data-tab="weekly">Weekly</button>
-            <button type="button" class="nav-tab-item" role="tab" id="tabbtn-top-player" aria-controls="tab-top-player" aria-selected="false" tabindex="-1" data-tab="top-player">Top Player (Total Menang)</button>
-            <button type="button" class="nav-tab-item" role="tab" id="tabbtn-top-loyal" aria-controls="tab-top-loyal" aria-selected="false" tabindex="-1" data-tab="top-loyal">Top Loyal (Sering Main)</button>
+            <button type="button" class="nav-tab-item active" role="tab" id="tabbtn-daily" aria-controls="tab-daily"
+                aria-selected="true" data-tab="daily">Daily</button>
+            <button type="button" class="nav-tab-item" role="tab" id="tabbtn-weekly" aria-controls="tab-weekly"
+                aria-selected="false" tabindex="-1" data-tab="weekly">Weekly</button>
+            <button type="button" class="nav-tab-item" role="tab" id="tabbtn-top-player" aria-controls="tab-top-player"
+                aria-selected="false" tabindex="-1" data-tab="top-player">Top Player (Total Menang)</button>
+            <button type="button" class="nav-tab-item" role="tab" id="tabbtn-top-loyal" aria-controls="tab-top-loyal"
+                aria-selected="false" tabindex="-1" data-tab="top-loyal">Top Loyal (Sering Main)</button>
         </div>
 
         <!-- PANEL TABEL: DAILY -->
@@ -74,7 +79,7 @@
 @section('scripts')
     <script>
         (function () {
-            // ---- TABS ----
+            // ---- TABS NAVIGATION ----
             var tabs = Array.prototype.slice.call(document.querySelectorAll('.nav-tab-item[role="tab"]'));
 
             function activateTab(name, setFocus) {
@@ -126,7 +131,7 @@
                 });
             }
 
-            // ---- STEPPER ----
+            // ---- STEPPER & AJAX SYNC ----
             var csrfToken = document.querySelector('meta[name="csrf-token"]');
             var feedback = document.getElementById('stat-feedback');
             var feedbackTimer;
@@ -143,13 +148,21 @@
                 }, 4000);
             }
 
-            // The same user can appear in several tab panels, so update every
-            // matching cell instead of reloading the whole page.
+            // Memperbarui elemen teks (span/strong) DAN elemen <input> di seluruh tab
             function syncUser(username, values) {
+                if (!values || typeof values !== 'object') return;
+
                 Object.keys(values).forEach(function (field) {
+                    if (values[field] === undefined || values[field] === null) return;
+
                     var selector = '[data-username="' + CSS.escape(username) + '"] [data-field="' + field + '"]';
                     document.querySelectorAll(selector).forEach(function (cell) {
-                        cell.textContent = values[field];
+                        if (cell.tagName === 'INPUT') {
+                            cell.value = values[field];
+                            cell.dataset.oldVal = values[field]; // Update baseline untuk manual change
+                        } else {
+                            cell.textContent = values[field];
+                        }
                         cell.classList.remove('is-updated');
                         void cell.offsetWidth;
                         cell.classList.add('is-updated');
@@ -157,44 +170,153 @@
                 });
             }
 
+            // Kirim AJAX ke server
+            async function sendStatAdjust(username, group, delta, targetRow, targetInput, oldVal) {
+                var rowButtons = targetRow ? targetRow.querySelectorAll('.step-btn') : [];
+                var inputs = targetRow ? targetRow.querySelectorAll('.point-input') : [];
+                var counters = targetRow ? targetRow.querySelectorAll('.step-counter') : [];
+
+                rowButtons.forEach(function (b) { b.disabled = true; });
+                inputs.forEach(function (i) { i.disabled = true; });
+                counters.forEach(function (c) { c.classList.add('is-busy'); });
+
+                try {
+                    var res = await fetch('{{ route('admin.adjust-stat') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken ? csrfToken.content : ''
+                        },
+                        body: JSON.stringify({ username: username, group: group, delta: delta })
+                    });
+
+                    var data = await res.json().catch(function () { return {}; });
+
+                    if (res.ok) {
+                        syncUser(username, data);
+                        notify('Data ' + username + ' diperbarui.', 'success');
+                    } else {
+                        // Revert jika gagal
+                        if (targetInput) {
+                            targetInput.value = oldVal;
+                            targetInput.dataset.oldVal = oldVal;
+                        }
+                        notify(data.error || 'Gagal mengubah data.', 'error');
+                    }
+                } catch (err) {
+                    if (targetInput) {
+                        targetInput.value = oldVal;
+                        targetInput.dataset.oldVal = oldVal;
+                    }
+                    notify('Koneksi bermasalah. Coba lagi.', 'error');
+                } finally {
+                    rowButtons.forEach(function (b) { b.disabled = false; });
+                    inputs.forEach(function (i) { i.disabled = false; });
+                    counters.forEach(function (c) { c.classList.remove('is-busy'); });
+                }
+            }
+
+            // Handle Tombol Stepper (+/-) DENGAN POPUP KONFIRMASI OVERLAY
             document.querySelectorAll('.step-btn').forEach(function (btn) {
-                btn.addEventListener('click', async function () {
+                btn.addEventListener('click', function () {
                     var username = btn.dataset.username;
                     var group = btn.dataset.group;
                     var delta = Number(btn.dataset.delta);
                     if (!username) return;
 
-                    var row = btn.closest('[data-username]');
-                    var rowButtons = row ? row.querySelectorAll('.step-btn') : [btn];
-                    var counters = row ? row.querySelectorAll('.step-counter') : [];
+                    var aksiText = delta > 0 ? 'menambah' : 'mengurangi';
+                    var groupLabel = group === 'hu' ? 'Hu' : (group === 'zi_mo' ? 'Zi Mo' : 'Match');
 
-                    rowButtons.forEach(function (b) { b.disabled = true; });
-                    counters.forEach(function (c) { c.classList.add('is-busy'); });
-
-                    try {
-                        var res = await fetch('{{ route('admin.adjust-stat') }}', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json',
-                                'X-CSRF-TOKEN': csrfToken ? csrfToken.content : ''
-                            },
-                            body: JSON.stringify({ username: username, group: group, delta: delta })
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            title: 'Konfirmasi Perubahan',
+                            text: `Yakin ingin ${aksiText} 1 poin ${groupLabel} untuk user ${username}?`,
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonColor: '#3085d6',
+                            cancelButtonColor: '#d33',
+                            confirmButtonText: 'Ya, Lanjutkan',
+                            cancelButtonText: 'Batal',
+                            reverseButtons: true
+                        }).then(function (result) {
+                            if (result.isConfirmed) {
+                                processStep();
+                            }
                         });
-
-                        var data = await res.json().catch(function () { return {}; });
-
-                        if (res.ok) {
-                            syncUser(username, data);
-                            notify('Data ' + username + ' diperbarui.', 'success');
-                        } else {
-                            notify(data.error || 'Gagal mengubah data.', 'error');
+                    } else {
+                        if (confirm(`Yakin ingin ${aksiText} 1 poin ${groupLabel} untuk user ${username}?`)) {
+                            processStep();
                         }
-                    } catch (err) {
-                        notify('Koneksi bermasalah. Coba lagi.', 'error');
-                    } finally {
-                        rowButtons.forEach(function (b) { b.disabled = false; });
-                        counters.forEach(function (c) { c.classList.remove('is-busy'); });
+                    }
+
+                    function processStep() {
+                        var container = btn.closest('.stepper');
+                        var input = container ? container.querySelector('.point-input') : null;
+                        var counter = container ? container.querySelector('.step-counter') : null;
+                        var oldVal = 0;
+
+                        if (input) {
+                            oldVal = parseInt(input.value, 10) || 0;
+                            var newVal = Math.max(0, oldVal + delta);
+                            input.value = newVal;
+                            input.dataset.oldVal = newVal;
+                        } else if (counter) {
+                            oldVal = parseInt(counter.textContent, 10) || 0;
+                            var newVal = Math.max(0, oldVal + delta);
+                            counter.textContent = newVal;
+                        }
+
+                        var row = btn.closest('[data-username]');
+                        sendStatAdjust(username, group, delta, row, input, oldVal);
+                    }
+                });
+            });
+
+            // Handle Perubahan Manual pada <input type="number"> DENGAN POPUP OVERLAY
+            document.querySelectorAll('.point-input').forEach(function (input) {
+                input.dataset.oldVal = input.value;
+
+                input.addEventListener('change', function () {
+                    var username = input.dataset.username;
+                    var group = input.dataset.group;
+                    var oldVal = parseInt(input.dataset.oldVal, 10) || 0;
+                    var newVal = parseInt(input.value, 10) || 0;
+                    var delta = newVal - oldVal;
+
+                    if (delta === 0 || !username) return;
+
+                    var groupLabel = group === 'hu' ? 'Hu' : (group === 'zi_mo' ? 'Zi Mo' : 'Match');
+
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            title: 'Konfirmasi Perubahan Manual',
+                            text: `Ubah nilai ${groupLabel} untuk ${username} dari ${oldVal} menjadi ${newVal}?`,
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#3085d6',
+                            cancelButtonColor: '#d33',
+                            confirmButtonText: 'Ya, Simpan',
+                            cancelButtonText: 'Batal',
+                            reverseButtons: true
+                        }).then(function (result) {
+                            if (result.isConfirmed) {
+                                input.dataset.oldVal = newVal;
+                                var row = input.closest('[data-username]');
+                                sendStatAdjust(username, group, delta, row, input, oldVal);
+                            } else {
+                                // Jika dibatalkan, kembalikan nilai input ke angka semula
+                                input.value = oldVal;
+                            }
+                        });
+                    } else {
+                        if (confirm(`Ubah nilai ${groupLabel} untuk ${username} dari ${oldVal} menjadi ${newVal}?`)) {
+                            input.dataset.oldVal = newVal;
+                            var row = input.closest('[data-username]');
+                            sendStatAdjust(username, group, delta, row, input, oldVal);
+                        } else {
+                            input.value = oldVal;
+                        }
                     }
                 });
             });

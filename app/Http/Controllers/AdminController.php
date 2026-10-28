@@ -24,7 +24,13 @@ class AdminController extends Controller
         $weekEnd = Carbon::now()->endOfWeek();
 
         return view('admin.dashboard', compact(
-            'users', 'dailyUsers', 'weeklyUsers', 'topPlayers', 'topLoyal', 'weekStart', 'weekEnd'
+            'users',
+            'dailyUsers',
+            'weeklyUsers',
+            'topPlayers',
+            'topLoyal',
+            'weekStart',
+            'weekEnd'
         ));
     }
 
@@ -39,49 +45,61 @@ class AdminController extends Controller
     }
 
     // adjust stat via AJAX (+/- button)
+    // adjust stat via AJAX (+/- button & input manual)
     public function adjustStat(Request $request)
     {
         $request->validate([
             'username' => 'required|string',
             'group' => 'required|string|in:wins,matches,hu,zi_mo',
-            'delta' => 'required|integer|in:-1,1',
+            'delta' => 'required|integer', // Hapus 'in:-1,1' agar mendukung input manual dengan angka bebas
         ]);
 
         $user = User::where('username', $request->username)->first();
 
-        if (! $user) {
+        if (!$user) {
             return response()->json(['error' => 'User tidak ditemukan.'], 404);
         }
 
-        // 1 kemenangan = total_wins + weekly_wins
-        // 1 match = daily_played + weekly_played + total_played
-        // Poin Hu / Zi Mo dihitung terpisah, total_wins = hu_points + zi_mo_points
         switch ($request->group) {
             case 'wins':
                 $columns = ['total_wins', 'weekly_wins'];
                 break;
+
             case 'matches':
                 $columns = ['daily_played', 'weekly_played', 'total_played'];
                 break;
+
             case 'hu':
                 $columns = ['hu_points'];
                 break;
+
             case 'zi_mo':
             default:
                 $columns = ['zi_mo_points'];
                 break;
         }
 
+        // Hitung nilai baru untuk kolom yang relevan
         $values = [];
         foreach ($columns as $column) {
             $values[$column] = max(0, ($user->$column ?? 0) + $request->delta);
             $user->$column = $values[$column];
         }
 
+        // Jika merubah poin Hu atau Zi Mo, kalkulasi ulang total_wins & weekly_wins
         if (in_array($request->group, ['hu', 'zi_mo'], true)) {
-            $user->total_wins = ($user->hu_points ?? 0) + ($user->zi_mo_points ?? 0);
-            // total_wins is derived, so return it too or the UI would show a stale value.
+            $oldTotalWins = $user->total_wins ?? 0;
+            $newTotalWins = ($user->hu_points ?? 0) + ($user->zi_mo_points ?? 0);
+
+            // Hitung selisih untuk menambah/mengurangi weekly_wins
+            $winDelta = $newTotalWins - $oldTotalWins;
+
+            $user->total_wins = $newTotalWins;
+            $user->weekly_wins = max(0, ($user->weekly_wins ?? 0) + $winDelta);
+
+            // Masukkan ke array response agar JS memperbarui tampilan "Total Menang" secara real-time
             $values['total_wins'] = $user->total_wins;
+            $values['weekly_wins'] = $user->weekly_wins;
         }
 
         $user->save();
@@ -101,7 +119,7 @@ class AdminController extends Controller
             ->orWhere('name', $request->username)
             ->first();
 
-        if (! $user) {
+        if (!$user) {
             return redirect()->back()->withErrors(['username' => 'Player tidak ditemukan di database.']);
         }
 
@@ -125,7 +143,7 @@ class AdminController extends Controller
             ->orWhere('name', $request->username)
             ->first();
 
-        if (! $user) {
+        if (!$user) {
             return redirect()->back()->withErrors(['username' => 'Player tidak ditemukan di database.']);
         }
 
@@ -184,8 +202,8 @@ class AdminController extends Controller
 
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'max:255', 'unique:users,username,'.$id],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.$id],
+            'username' => ['required', 'string', 'max:255', 'unique:users,username,' . $id],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $id],
             'birth_date' => ['required', 'date'],
             'password' => ['nullable', 'string', 'min:6'],
         ]);
