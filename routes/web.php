@@ -3,12 +3,14 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PublicController;
+use App\Http\Controllers\ScorerController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 // Public
 Route::get('/', [PublicController::class, 'index'])->name('home');
 Route::get('/about-us', [PublicController::class, 'about'])->name('about');
+Route::get('/scorer', [ScorerController::class, 'index'])->name('scorer.index')->middleware('auth');
 
 // Admin
 Route::prefix('admin')->group(function () {
