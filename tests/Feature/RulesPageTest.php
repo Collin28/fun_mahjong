@@ -47,6 +47,7 @@ class RulesPageTest extends TestCase
 
         $this->get('/register')
             ->assertStatus(200)
-            ->assertSee('autocomplete="new-password"', false);
+            ->assertSee('autocomplete="tel"', false)
+            ->assertDontSee('autocomplete="new-password"', false);
     }
 }

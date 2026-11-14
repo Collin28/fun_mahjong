@@ -4,16 +4,15 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\ScorerController;
-use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 // Public
 Route::get('/', [PublicController::class, 'index'])->name('home');
 Route::get('/about-us', [PublicController::class, 'about'])->name('about');
-Route::get('/scorer', [ScorerController::class, 'index'])->name('scorer.index')->middleware('auth');
+Route::get('/scorer', [ScorerController::class, 'index'])->name('scorer.index')->middleware(['auth', 'admin']);
 
 // Admin
-Route::prefix('admin')->group(function () {
+Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
 
     Route::get('/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
 
@@ -25,7 +24,7 @@ Route::prefix('admin')->group(function () {
 });
 
 // Manage User (Admin Page)
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
 
     // Prefix Khusus Manage Users
     Route::prefix('users')->name('users.')->group(function () {
@@ -44,7 +43,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 // User
 Route::prefix('user')->group(function () {
-    Route::get('/dashboard', [UserController::class, 'index'])->name('user.dashboard');
+    Route::redirect('/dashboard', '/')->name('user.dashboard');
 });
 
 // Auth
@@ -54,7 +53,7 @@ Route::middleware('guest')->group(function () {
     Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
 
     // Eksekusi Submit Form Login & Register
-    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
     Route::post('/register', [AuthController::class, 'register']);
 });
 
@@ -62,11 +61,4 @@ Route::post('/logout', [AuthController::class, 'logout'])
     ->name('logout')
     ->middleware('auth');
 
-Route::middleware(['auth'])->group(function () {
-    Route::get('/home', [UserController::class, 'index'])->name('user.dashboard');
-});
-
-Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    // URL: /admin/dashboard | Nama Route: admin.dashboard
-    Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
-});
+Route::redirect('/home', '/');

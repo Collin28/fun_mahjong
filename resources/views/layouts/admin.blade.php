@@ -1052,6 +1052,11 @@
                     <span class="menu-icon" aria-hidden="true">&#x1F465;</span> Manage Users
                 </a>
             </li>
+            <li>
+                <a href="{{ route('scorer.index') }}" class="{{ request()->routeIs('scorer.*') ? 'active' : '' }}" @if(request()->routeIs('scorer.*')) aria-current="page" @endif>
+                    <span class="menu-icon" aria-hidden="true">&#x1F004;</span> Scoring
+                </a>
+            </li>
         </ul>
 
         <form action="{{ route('logout') }}" method="POST">

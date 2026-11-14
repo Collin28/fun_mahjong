@@ -25,8 +25,7 @@
                 <thead>
                     <tr>
                         <th scope="col">User</th>
-                        <th scope="col">Email</th>
-                        <th scope="col">Tanggal Lahir</th>
+                        <th scope="col">Nomor HP</th>
                         <th scope="col" class="col-center">Aksi</th>
                     </tr>
                 </thead>
@@ -38,12 +37,10 @@
                                     <span class="avatar-img" aria-hidden="true">{{ $user->profile_animal_emoji }}</span>
                                     <span>
                                         <span class="user-cell-name">{{ $user->name }}</span>
-                                        <span class="user-cell-handle">{{ '@' . $user->username }}</span>
                                     </span>
                                 </div>
                             </td>
-                            <td class="cell-muted">{{ $user->email }}</td>
-                            <td class="cell-muted">{{ $user->birth_date ? \Carbon\Carbon::parse($user->birth_date)->format('d M') : '-' }}</td>
+                            <td class="cell-muted">{{ $user->username }}</td>
                             <td class="col-center">
                                 <div class="row-actions">
                                     <a href="{{ route('admin.users.show', $user->id) }}" class="btn-action btn-action-detail">
@@ -66,7 +63,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="table-empty">
+                            <td colspan="3" class="table-empty">
                                 <span class="empty-title">Belum ada data user</span>
                                 <span class="empty-hint">User yang mendaftar lewat halaman registrasi akan muncul di sini.</span>
                             </td>

@@ -33,26 +33,8 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label-caps" for="username">Username</label>
-                <input type="text" name="username" id="username" value="{{ old('username', $user->username) }}" required maxlength="255" autocomplete="username" autocapitalize="none" spellcheck="false" class="form-control" @error('username') aria-invalid="true" @enderror>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label-caps" for="email">Email</label>
-                <input type="email" name="email" id="email" value="{{ old('email', $user->email) }}" required maxlength="255" autocomplete="email" autocapitalize="none" spellcheck="false" class="form-control" @error('email') aria-invalid="true" @enderror>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label-caps" for="birth_date">Tanggal Lahir</label>
-                <input type="date" name="birth_date" id="birth_date" value="{{ old('birth_date', $user->birth_date) }}" required max="{{ date('Y-m-d') }}" class="form-control" @error('birth_date') aria-invalid="true" @enderror>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label-caps" for="password">
-                    Password Baru <span class="form-label-note">(Kosongkan jika tidak diubah)</span>
-                </label>
-                <input type="password" name="password" id="password" minlength="6" autocomplete="new-password" class="form-control" aria-describedby="password-hint" @error('password') aria-invalid="true" @enderror>
-                <p class="form-hint" id="password-hint">Minimal 6 karakter. Biarkan kosong untuk mempertahankan password lama.</p>
+                <label class="form-label-caps" for="phone">Nomor HP</label>
+                <input type="tel" name="phone" id="phone" value="{{ old('phone', $user->username) }}" required minlength="10" maxlength="15" pattern="[0-9]{10,15}" autocomplete="tel" inputmode="numeric" class="form-control" @error('phone') aria-invalid="true" @enderror>
             </div>
 
             <div class="form-actions">

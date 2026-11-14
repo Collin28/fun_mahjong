@@ -1,13 +1,13 @@
 @extends('layouts.public')
 
-@section('title', 'Masuk - FUN MAHJONG')
-@section('meta-description', 'Masuk ke akun Fun Mahjong kamu untuk melihat statistik permainan dan posisi di papan peringkat.')
+@section('title', 'Login Admin - FUN MAHJONG')
+@section('meta-description', 'Halaman login khusus administrator Fun Mahjong.')
 
 @section('content')
     <section class="hero login-container">
         <div class="login-card">
-            <h1 class="login-title">Selamat Datang</h1>
-            <p class="login-subtitle">Silakan masuk ke akun Fun Mahjong kamu.</p>
+            <h1 class="login-title">Login Admin</h1>
+            <p class="login-subtitle">Halaman ini hanya untuk admin. Pemain tidak perlu login.</p>
 
             @if(session('success'))
                 <div class="form-alert form-alert-success" role="status">
@@ -66,7 +66,7 @@
             </form>
 
             <p class="login-alt-action">
-                Belum punya akun? <a href="{{ route('register') }}">Daftar di sini</a>
+                Ingin mendaftarkan data pemain? <a href="{{ route('register') }}">Daftar di sini</a>
             </p>
         </div>
     </section>

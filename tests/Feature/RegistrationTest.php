@@ -10,44 +10,62 @@ class RegistrationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_registration_uses_month_and_day_and_persists_an_animal_avatar(): void
+    public function test_registration_only_collects_name_and_phone(): void
     {
         $this->get('/register')->assertOk()
-            ->assertSee('name="birth_month"', false)
-            ->assertSee('name="birth_day"', false)
-            ->assertDontSee('type="date"', false)
-            ->assertDontSee('name="birth_year"', false);
-
-        $this->post('/register', [
-            'name' => 'Test Player',
-            'username' => 'testplayer',
-            'email' => 'player@example.com',
-            'birth_month' => 2,
-            'birth_day' => 29,
-            'password' => 'password123',
-        ])->assertSessionHasNoErrors()->assertRedirect(route('user.dashboard'));
-
-        $user = User::where('username', 'testplayer')->firstOrFail();
-        $this->assertSame('2000-02-29', $user->birth_date);
-        $this->assertContains($user->profile_picture, ['panda', 'tiger', 'fox', 'cat', 'rabbit', 'bear', 'koala', 'penguin']);
-        $this->assertAuthenticatedAs($user);
-        $avatar = $user->profile_animal_emoji;
-        $this->get(route('user.dashboard'))->assertOk()->assertSee($avatar);
-        $this->get('/')->assertOk()->assertSee($avatar);
-        $this->assertSame($avatar, $user->fresh()->profile_animal_emoji);
+            ->assertSee('name="name"', false)
+            ->assertSee('name="phone"', false)
+            ->assertDontSee('name="username"', false)
+            ->assertDontSee('name="email"', false)
+            ->assertDontSee('name="password"', false)
+            ->assertDontSee('name="birth_month"', false)
+            ->assertDontSee('name="birth_day"', false);
     }
 
-    public function test_registration_rejects_impossible_month_and_day(): void
+    public function test_registration_saves_player_data_without_logging_in(): void
     {
-        $this->from('/register')->post('/register', [
+        $this->post('/register', [
             'name' => 'Test Player',
-            'username' => 'testplayer',
-            'email' => 'player@example.com',
-            'birth_month' => 4,
-            'birth_day' => 31,
-            'password' => 'password123',
-        ])->assertRedirect('/register')->assertSessionHasErrors('birth_day');
+            'phone' => '081234567890',
+            'role' => 'admin',
+            'password' => 'chosen-password',
+        ])->assertSessionHasNoErrors()->assertRedirect(route('register'))->assertSessionHas('success');
+
+        $this->assertDatabaseHas('users', [
+            'name' => 'Test Player',
+            'username' => '081234567890',
+            'role' => 'user',
+        ]);
+        $user = User::where('username', '081234567890')->firstOrFail();
+        $this->assertContains($user->profile_picture, ['panda', 'tiger', 'fox', 'cat', 'rabbit', 'bear', 'koala', 'penguin']);
+        $this->assertFalse(\Illuminate\Support\Facades\Hash::check('chosen-password', $user->password));
+        $this->assertGuest();
+    }
+
+    public function test_registration_requires_name_and_phone(): void
+    {
+        $this->from('/register')->post('/register', [])
+            ->assertRedirect('/register')->assertSessionHasErrors(['name', 'phone']);
 
         $this->assertDatabaseCount('users', 0);
+    }
+
+    public function test_registration_rejects_invalid_phone(): void
+    {
+        $this->post('/register', ['name' => 'Test Player', 'phone' => 'not-a-phone'])
+            ->assertSessionHasErrors('phone');
+
+        $this->assertDatabaseCount('users', 0);
+    }
+
+    public function test_registration_rejects_duplicate_phone(): void
+    {
+        $this->post('/register', ['name' => 'First Player', 'phone' => '081234567890']);
+        $this->app['auth']->forgetGuards();
+
+        $this->post('/register', ['name' => 'Second Player', 'phone' => '081234567890'])
+            ->assertSessionHasErrors('phone');
+
+        $this->assertDatabaseCount('users', 1);
     }
 }

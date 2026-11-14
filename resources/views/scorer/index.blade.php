@@ -1,7 +1,7 @@
 @extends('layouts.public')
 
 @section('title', 'Scorer Meja - FUN MAHJONG')
-@section('meta-description', 'Pencatat skor meja mahjong: Hu 1 poin, Zi Mo 2 poin. Sekali tap langsung update leaderboard.')
+@section('meta-description', 'Pencatat skor meja mahjong dengan input angka manual untuk setiap pemain.')
 
 @section('head')
 <style>
@@ -19,11 +19,9 @@
     .player-emoji { font-size: 2rem; }
     .player-name { font-weight: 800; font-size: 1.1rem; margin: 4px 0; }
     .player-score { font-size: 2.2rem; font-weight: 900; margin: 6px 0 12px; }
-    .player-btns { display: flex; gap: 8px; }
-    .player-btns button { flex: 1; min-height: 52px; border: 0; border-radius: 10px; font-weight: 800; font-size: 1rem; cursor: pointer; }
-    .btn-hu { background: #15382B; color: #fff; }
-    .btn-zimo { background: #E85D04; color: #fff; }
-    .player-btns button:disabled { opacity: .4; cursor: not-allowed; }
+    .score-input { width: 100%; box-sizing: border-box; min-height: 52px; padding: 8px 12px; border: 2px solid #15382B; border-radius: 10px; text-align: center; font-size: 1.8rem; font-weight: 900; }
+    .score-save { width: 100%; min-height: 44px; margin-top: 8px; border: 0; border-radius: 10px; background: #15382B; color: #fff; font-weight: 800; cursor: pointer; }
+    .score-save:disabled { opacity: .4; cursor: not-allowed; }
     .scorer-actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 20px 0 12px; }
     .scorer-actions button { min-height: 48px; padding: 10px 18px; border-radius: 10px; border: 1px solid #15382B; background: #fff; font-weight: 700; cursor: pointer; }
     .scorer-actions .btn-danger { background: #D00000; border-color: #D00000; color: #fff; }
@@ -41,7 +39,7 @@
         <h1>🀄 Scorer Meja</h1>
         <strong>Tangan #<span id="hand-number">0</span></strong>
     </div>
-    <p class="scorer-info">Hu = 1 poin &nbsp;•&nbsp; Zi Mo = 2 poin &nbsp;•&nbsp; Sekali tap langsung update leaderboard (menang + match 4 pemain).</p>
+    <p class="scorer-info">Masukkan total skor tiap pemain secara manual, lalu tekan Simpan Skor. Skor meja tersimpan di browser; poin Hu/Zi Mo pada leaderboard tetap dikelola melalui Dashboard Admin.</p>
 
     <div class="setup-grid" id="setup-grid">
         @for($i = 0; $i < 4; $i++)
@@ -60,7 +58,7 @@
 
     <div class="scorer-actions">
         <button type="button" id="btn-seri">🤝 Seri (tanpa pemenang)</button>
-        <button type="button" id="btn-undo">↩️ Undo tangan terakhir</button>
+        <button type="button" id="btn-undo">↩️ Undo perubahan terakhir</button>
         <button type="button" id="btn-reset" class="btn-danger">↺ Reset Meja</button>
     </div>
 
@@ -123,16 +121,14 @@
             return '<div class="player-card">' +
                 '<div class="player-emoji">' + esc(info.emoji) + '</div>' +
                 '<div class="player-name">' + esc(info.name) + '</div>' +
-                '<div class="player-score">' + state.scores[i] + '</div>' +
-                '<div class="player-btns">' +
-                    '<button type="button" class="btn-hu" data-win="' + i + '" data-type="hu" ' + dis + '>Hu +1</button>' +
-                    '<button type="button" class="btn-zimo" data-win="' + i + '" data-type="zi_mo" ' + dis + '>Zi Mo +2</button>' +
+                '<input type="number" class="score-input" data-score="' + i + '" min="0" step="1" value="' + state.scores[i] + '" aria-label="Skor ' + esc(info.name) + '" ' + dis + '>' +
+                '<button type="button" class="score-save" data-score-save="' + i + '" ' + dis + '>Simpan Skor</button>' +
                 '</div></div>';
         }).join('');
 
         var list = document.getElementById('history-list');
         list.innerHTML = state.history.length
-            ? state.history.slice(-10).reverse().map(function (h) { return '<div>#' + h.hand + ' — ' + esc(h.text) + '</div>'; }).join('')
+            ? state.history.slice(-10).reverse().map(function (h) { return '<div>' + esc(h.type === 'manual' ? userInfo(h.username).name + ': ' + h.previous + ' → ' + h.score : '#' + h.hand + ' — ' + h.text) + '</div>'; }).join('')
             : 'Belum ada tangan tercatat.';
     }
 
@@ -164,9 +160,33 @@
         });
     });
 
+    function saveManualScore(index, rawValue) {
+        var value = Number(rawValue);
+        if (!String(rawValue).trim() || !Number.isSafeInteger(value) || value < 0 || !state.slots[index]) {
+            say('Masukkan skor berupa bilangan bulat 0 atau lebih.');
+            render();
+            return;
+        }
+
+        var previous = state.scores[index];
+        var delta = value - previous;
+        if (delta === 0) {
+            say('Skor tidak berubah.');
+            return;
+        }
+
+        state.scores[index] = value;
+        state.history.push({ type: 'manual', index: index, username: state.slots[index], previous: previous, score: value });
+        save();
+        render();
+        say('✅ Skor ' + userInfo(state.slots[index]).name + ' disimpan: ' + value + '.');
+    }
+
     grid.addEventListener('click', function (e) {
-        var btn = e.target.closest('[data-win]');
-        if (btn) record(btn.dataset.type, Number(btn.dataset.win));
+        var btn = e.target.closest('[data-score-save]');
+        if (!btn) return;
+        var input = grid.querySelector('[data-score="' + btn.dataset.scoreSave + '"]');
+        saveManualScore(Number(btn.dataset.scoreSave), input ? input.value : '');
     });
 
     document.getElementById('btn-seri').addEventListener('click', function () { record('seri', null); });
@@ -174,6 +194,12 @@
     document.getElementById('btn-undo').addEventListener('click', function () {
         var last = state.history.pop();
         if (!last) { say('Belum ada tangan untuk di-undo.'); return; }
+        if (last.type === 'manual') {
+            state.scores[last.index] = last.previous;
+            save(); render();
+            say('↩️ Perubahan skor dibatalkan.');
+            return;
+        }
         state.hand = Math.max(0, state.hand - 1);
         if (last.winner) {
             var idx = last.usernames.indexOf(last.winner);

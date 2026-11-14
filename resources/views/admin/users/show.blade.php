@@ -14,18 +14,14 @@
             <span class="avatar-img avatar-lg" aria-hidden="true">{{ $user->profile_animal_emoji }}</span>
             <div>
                 <h2 class="detail-name">{{ $user->name }}</h2>
-                <p class="detail-handle">{{ '@' . $user->username }}</p>
+                <p class="detail-handle">Data Pemain</p>
             </div>
         </div>
 
         <dl class="detail-grid">
             <div class="detail-field">
-                <dt>Email</dt>
-                <dd>{{ $user->email }}</dd>
-            </div>
-            <div class="detail-field">
-                <dt>Tanggal Lahir</dt>
-                <dd>{{ $user->birth_date ? \Carbon\Carbon::parse($user->birth_date)->format('d F') : '-' }}</dd>
+                <dt>Nomor HP</dt>
+                <dd>{{ $user->username }}</dd>
             </div>
             <div class="detail-field">
                 <dt>Total Kemenangan (Poin)</dt>

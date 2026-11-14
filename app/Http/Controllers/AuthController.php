@@ -3,15 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-    public function login(Request $request)
+    public function login(Request $request): RedirectResponse
     {
-
         $credentials = $request->validate([
             'username' => ['required', 'string'],
             'password' => ['required', 'string'],
@@ -20,79 +22,57 @@ class AuthController extends Controller
             'password.required' => 'Password wajib diisi!',
         ]);
 
+        $credentials['role'] = 'admin';
+
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
-            $user = Auth::user();
-
-            if ($user->role === 'admin') {
-                return redirect()->intended(route('admin.dashboard'))
-                    ->with('success', 'Selamat datang Kembali, Admin!');
-            }
-
-            return redirect()->intended(route('user.dashboard'))
-                ->with('success', 'Selamat bermain!');
+            return redirect()->intended(route('admin.dashboard'))
+                ->with('success', 'Selamat datang kembali, Admin!');
         }
 
-        // 4. Jika Login Gagal
         return back()->withErrors([
-            'username' => 'Username yang Anda masukkan salah.',
-            'password' => 'Password yang Anda masukkan salah.',
+            'username' => 'Akun admin atau password yang Anda masukkan salah.',
         ])->onlyInput('username');
     }
 
-    public function showLoginForm()
+    public function showLoginForm(): View
     {
         return view('auth.login');
     }
 
-    public function showRegisterForm()
+    public function showRegisterForm(): View
     {
         return view('auth.register');
     }
 
-    public function register(Request $request)
+    public function register(Request $request): RedirectResponse
     {
-        // 1. Validasi Input Form
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'max:255', 'unique:users,username'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'birth_month' => ['required', 'integer', 'between:1,12'],
-            'birth_day' => ['required', 'integer', 'between:1,31'],
-            'password' => ['required', 'string', 'min:6'],
+            'phone' => ['required', 'string', 'regex:/^[0-9]{10,15}$/', 'unique:users,username'],
         ], [
-            'username.unique' => 'Username ini sudah digunakan!',
-            'email.unique' => 'Email ini sudah terdaftar!',
-            'password.min' => 'Password minimal 6 karakter!',
-            'password.confirmed' => 'Konfirmasi password tidak cocok!',
+            'phone.required' => 'Nomor HP wajib diisi!',
+            'phone.regex' => 'Nomor HP harus terdiri dari 10 sampai 15 digit angka.',
+            'phone.unique' => 'Nomor HP ini sudah terdaftar!',
         ]);
-
-        if (! checkdate($validated['birth_month'], $validated['birth_day'], 2000)) {
-            return back()->withErrors(['birth_day' => 'Tanggal lahir tidak valid.'])->withInput();
-        }
 
         $animals = ['panda', 'tiger', 'fox', 'cat', 'rabbit', 'bear', 'koala', 'penguin'];
 
-        // 2. Simpan Data Baru ke Database SQLite
-        $user = User::create([
+        User::create([
             'name' => $validated['name'],
-            'username' => $validated['username'],
-            'email' => $validated['email'],
-            'birth_date' => sprintf('%04d-%02d-%02d', 2000, $validated['birth_month'], $validated['birth_day']),
+            'username' => $validated['phone'],
+            'email' => 'player-'.Str::uuid().'@players.invalid',
+            'birth_date' => '1000-01-01',
             'profile_picture' => $animals[random_int(0, count($animals) - 1)],
-            'password' => Hash::make($validated['password']),
+            'password' => Hash::make(Str::random(64)),
             'role' => 'user',
         ]);
 
-        // 3. Otomatis Login Setelah Berhasil Daftar
-        Auth::login($user);
-        $request->session()->regenerate();
-
-        return redirect()->route('user.dashboard')->with('success', 'Registrasi berhasil! Selamat datang di Fun Mahjong.');
+        return redirect()->route('register')->with('success', 'Pendaftaran berhasil! Data Anda sudah tercatat. Anda tidak perlu login.');
     }
 
-    public function logout(Request $request)
+    public function logout(Request $request): RedirectResponse
     {
         // 1. Keluar dari guard autentikasi Laravel (menghapus status login user)
         Auth::logout();

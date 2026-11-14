@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class AdminController extends Controller
 {
@@ -38,7 +38,7 @@ class AdminController extends Controller
     private function decorateUsers($users)
     {
         return $users->map(function ($user) {
-            $user->is_birthday = Carbon::parse($user->birth_date)->isBirthday();
+            $user->is_birthday = $user->birth_date !== '1000-01-01' && Carbon::parse($user->birth_date)->isBirthday();
 
             return $user;
         });
@@ -200,24 +200,18 @@ class AdminController extends Controller
     {
         $user = User::findOrFail($id);
 
-        $request->validate([
+        $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'max:255', 'unique:users,username,' . $id],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $id],
-            'birth_date' => ['required', 'date'],
-            'password' => ['nullable', 'string', 'min:6'],
+            'phone' => ['required', 'string', 'regex:/^[0-9]{10,15}$/', Rule::unique('users', 'username')->ignore($user->id)],
+        ], [
+            'phone.regex' => 'Nomor HP harus terdiri dari 10 sampai 15 digit angka.',
+            'phone.unique' => 'Nomor HP ini sudah terdaftar!',
         ]);
 
         $data = [
-            'name' => $request->name,
-            'username' => $request->username,
-            'email' => $request->email,
-            'birth_date' => $request->birth_date,
+            'name' => $validated['name'],
+            'username' => $validated['phone'],
         ];
-
-        if ($request->filled('password')) {
-            $data['password'] = Hash::make($request->password);
-        }
 
         $user->update($data);
 

@@ -33,7 +33,6 @@
                     <button type="submit" class="btn-book">Keluar</button>
                 </form>
             @else
-                <a href="{{ route('login') }}" class="{{ request()->routeIs('login') ? 'nav-link active' : 'nav-link' }}" @if(request()->routeIs('login')) aria-current="page" @endif>Masuk</a>
                 <a href="{{ route('register') }}" class="{{ request()->routeIs('register') ? 'nav-link active' : 'nav-link' }}" @if(request()->routeIs('register')) aria-current="page" @endif>Daftar</a>
                 <a href="https://lynk.id/fun_mahjong" class="btn-book" target="_blank" rel="noopener">Pesan Permainan</a>
             @endauth
@@ -74,7 +73,6 @@
                     <button type="submit" class="btn-book mobile-logout-btn">Keluar</button>
                 </form>
             @else
-                <a href="{{ route('login') }}" class="mobile-auth-link {{ request()->routeIs('login') ? 'active' : '' }}" @if(request()->routeIs('login')) aria-current="page" @endif>Masuk</a>
                 <a href="{{ route('register') }}" class="mobile-auth-link {{ request()->routeIs('register') ? 'active' : '' }}" @if(request()->routeIs('register')) aria-current="page" @endif>Daftar</a>
                 <a href="https://lynk.id/fun_mahjong" class="btn-book" target="_blank" rel="noopener">Pesan Permainan</a>
             @endauth
