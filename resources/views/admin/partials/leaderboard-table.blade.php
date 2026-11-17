@@ -5,7 +5,7 @@
     $suffix = $suffix ?? 'Main';
     $hideMetric = $hideMetric ?? false;
     $caption = $caption ?? null;
-    $colspan = $hideMetric ? 9 : 10;
+    $colspan = $hideMetric ? 10 : 11;
 @endphp
 
 <div class="table-responsive" tabindex="0" role="region" aria-label="{{ $caption ?? 'Tabel leaderboard' }}">
@@ -17,7 +17,7 @@
             <tr>
                 <th scope="col">Rank</th>
                 <th scope="col">User Profile</th>
-                <th scope="col">Username</th>
+                <th scope="col">Nama Pemain</th>
                 <th scope="col">TTL / Ultah</th>
                 @unless($hideMetric)
                     <th scope="col">{{ $metricLabel }}</th>
@@ -25,6 +25,7 @@
                 <th scope="col">Hu</th>
                 <th scope="col">Zi Mo</th>
                 <th scope="col">Total Menang</th>
+                <th scope="col">Akumulasi Poin</th>
                 <th scope="col">Match</th>
                 <th scope="col">Aksi</th>
             </tr>
@@ -48,7 +49,7 @@
                         </div>
                     </td>
 
-                    <td>{{ $user->username }}</td>
+                    <td>{{ $displayName }}</td>
 
                     <td>
                         {{ $user->birth_date ? \Carbon\Carbon::parse($user->birth_date)->format('d/m') : '-' }}
@@ -92,6 +93,9 @@
 
                     <td>
                         <strong data-field="total_wins">{{ $user->total_wins ?? 0 }}</strong>
+                    </td>
+                    <td>
+                        <strong data-field="accumulated_points">{{ $user->accumulated_points }}</strong>
                     </td>
 
                     <td>

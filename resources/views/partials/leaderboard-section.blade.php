@@ -3,13 +3,6 @@
     $weeklyUsers = $weeklyUsers ?? collect();
     $topPlayers  = $topPlayers ?? collect();
     $topLoyal    = $topLoyal ?? collect();
-
-    $winRatePlayers = $topPlayers->map(function ($user) {
-        $user->win_rate = $user->total_played > 0
-            ? round(($user->total_wins / $user->total_played) * 100, 1) . '%'
-            : '0%';
-        return $user;
-    });
 @endphp
 
 <section class="leaderboard-section" id="leaderboard">
@@ -60,11 +53,9 @@
 
     <div id="tab-top-player" class="tab-content" role="tabpanel" aria-labelledby="tabbtn-top-player" tabindex="0" hidden>
         @include('partials.public-leaderboard-table', [
-            'users' => $winRatePlayers,
+            'users' => $topPlayers,
             'caption' => 'Peringkat pemain terbaik berdasarkan total poin kemenangan',
-            'metricLabel' => 'Win Rate',
-            'metricKey' => 'win_rate',
-            'metricSuffix' => '',
+            'hideMetric' => true,
             'totalLabel' => 'Total Win (Hu + Zi Mo)',
             'totalKey' => 'total_wins',
             'totalSuffix' => '',

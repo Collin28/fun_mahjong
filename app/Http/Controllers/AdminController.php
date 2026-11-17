@@ -9,16 +9,18 @@ use Illuminate\Validation\Rule;
 
 class AdminController extends Controller
 {
+    private const LEADERBOARD_LIMIT = 10;
+
     // main dashboard
     public function index()
     {
         $users = $this->decorateUsers(User::where('role', 'user')->latest()->get());
 
         // Leaderboard per kategori: daily, weekly, top player (menang), top loyal (sering main)
-        $dailyUsers = $this->decorateUsers(User::where('role', 'user')->orderByDesc('daily_played')->orderBy('username')->get());
-        $weeklyUsers = $this->decorateUsers(User::where('role', 'user')->orderByDesc('weekly_played')->orderBy('username')->get());
-        $topPlayers = $this->decorateUsers(User::where('role', 'user')->orderByRaw('(hu_points + zi_mo_points) DESC')->orderBy('username')->get());
-        $topLoyal = $this->decorateUsers(User::where('role', 'user')->orderByDesc('total_played')->orderBy('username')->get());
+        $dailyUsers = $this->decorateUsers(User::where('role', 'user')->orderByDesc('daily_played')->orderBy('username')->limit(self::LEADERBOARD_LIMIT)->get());
+        $weeklyUsers = $this->decorateUsers(User::where('role', 'user')->orderByDesc('weekly_played')->orderBy('username')->limit(self::LEADERBOARD_LIMIT)->get());
+        $topPlayers = $this->decorateUsers(User::where('role', 'user')->orderByRaw('(hu_points + 2 * zi_mo_points) DESC')->orderBy('username')->limit(self::LEADERBOARD_LIMIT)->get());
+        $topLoyal = $this->decorateUsers(User::where('role', 'user')->orderByDesc('total_played')->orderBy('username')->limit(self::LEADERBOARD_LIMIT)->get());
 
         $weekStart = Carbon::now()->startOfWeek();
         $weekEnd = Carbon::now()->endOfWeek();
@@ -56,7 +58,7 @@ class AdminController extends Controller
 
         $user = User::where('username', $request->username)->first();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(['error' => 'User tidak ditemukan.'], 404);
         }
 
@@ -79,6 +81,8 @@ class AdminController extends Controller
                 break;
         }
 
+        $oldTotalWins = $user->total_wins ?? 0;
+
         // Hitung nilai baru untuk kolom yang relevan
         $values = [];
         foreach ($columns as $column) {
@@ -88,7 +92,6 @@ class AdminController extends Controller
 
         // Jika merubah poin Hu atau Zi Mo, kalkulasi ulang total_wins & weekly_wins
         if (in_array($request->group, ['hu', 'zi_mo'], true)) {
-            $oldTotalWins = $user->total_wins ?? 0;
             $newTotalWins = ($user->hu_points ?? 0) + ($user->zi_mo_points ?? 0);
 
             // Hitung selisih untuk menambah/mengurangi weekly_wins
@@ -100,6 +103,7 @@ class AdminController extends Controller
             // Masukkan ke array response agar JS memperbarui tampilan "Total Menang" secara real-time
             $values['total_wins'] = $user->total_wins;
             $values['weekly_wins'] = $user->weekly_wins;
+            $values['accumulated_points'] = $user->accumulated_points;
         }
 
         $user->save();
@@ -119,7 +123,7 @@ class AdminController extends Controller
             ->orWhere('name', $request->username)
             ->first();
 
-        if (!$user) {
+        if (! $user) {
             return redirect()->back()->withErrors(['username' => 'Player tidak ditemukan di database.']);
         }
 
@@ -143,7 +147,7 @@ class AdminController extends Controller
             ->orWhere('name', $request->username)
             ->first();
 
-        if (!$user) {
+        if (! $user) {
             return redirect()->back()->withErrors(['username' => 'Player tidak ditemukan di database.']);
         }
 

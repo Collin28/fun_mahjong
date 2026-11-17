@@ -39,6 +39,14 @@ class User extends Authenticatable
         return Attribute::get(fn () => ($this->hu_points ?? 0) + ($this->zi_mo_points ?? 0));
     }
 
+    /**
+     * Akumulasi poin: setiap Hu bernilai 1 dan setiap Zi Mo bernilai 2.
+     */
+    protected function accumulatedPoints(): Attribute
+    {
+        return Attribute::get(fn (): int => (int) ($this->hu_points ?? 0) + 2 * (int) ($this->zi_mo_points ?? 0));
+    }
+
     protected $fillable = [
         'name',
         'username',

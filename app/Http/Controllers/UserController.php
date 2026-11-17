@@ -13,7 +13,7 @@ class UserController extends Controller
 
         $dailyUsers = User::where('role', 'user')->orderByDesc('daily_played')->orderBy('username')->get();
         $weeklyUsers = User::where('role', 'user')->orderByDesc('weekly_played')->orderBy('username')->get();
-        $topPlayers = User::where('role', 'user')->orderByRaw('(hu_points + zi_mo_points) DESC')->orderBy('username')->get();
+        $topPlayers = User::where('role', 'user')->orderByRaw('(hu_points + 2 * zi_mo_points) DESC')->orderBy('username')->get();
         $topLoyal = User::where('role', 'user')->orderByDesc('total_played')->orderBy('username')->get();
 
         $allTimeRank = $this->rankOf($topPlayers, $user);

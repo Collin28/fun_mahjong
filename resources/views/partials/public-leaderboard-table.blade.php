@@ -8,8 +8,9 @@
     $totalSuffix = $totalSuffix ?? '';
     $loyalty = $loyalty ?? false;
     $showPoints = $showPoints ?? false;
+    $hideMetric = $hideMetric ?? false;
     $caption = $caption ?? null;
-    $colspan = $showPoints ? 6 : 4;
+    $colspan = ($showPoints ? 6 : 3) + ($hideMetric ? 0 : 1);
 @endphp
 
 <div class="leaderboard-table-wrapper">
@@ -21,10 +22,13 @@
             <tr>
                 <th scope="col" class="col-rank">Posisi</th>
                 <th scope="col">Pemain</th>
-                <th scope="col">{{ $metricLabel }}</th>
+                @unless($hideMetric)
+                    <th scope="col">{{ $metricLabel }}</th>
+                @endunless
                 @if($showPoints)
                     <th scope="col" class="col-center">Hu</th>
                     <th scope="col" class="col-center">Zi Mo</th>
+                    <th scope="col" class="col-center">Akumulasi Poin</th>
                 @endif
                 <th scope="col" class="col-end">{{ $totalLabel }}</th>
             </tr>
@@ -57,10 +61,13 @@
                             <span class="player-name">{{ $displayName }}</span>
                         </div>
                     </td>
-                    <td data-label="{{ $metricLabel }}">{{ $user->{$metricKey} ?? 0 }}@if($metricSuffix) {{ $metricSuffix }}@endif</td>
+                    @unless($hideMetric)
+                        <td data-label="{{ $metricLabel }}">{{ $user->{$metricKey} ?? 0 }}@if($metricSuffix) {{ $metricSuffix }}@endif</td>
+                    @endunless
                     @if($showPoints)
                         <td data-label="Hu" class="col-center">{{ $user->hu_points ?? 0 }}</td>
                         <td data-label="Zi Mo" class="col-center">{{ $user->zi_mo_points ?? 0 }}</td>
+                        <td data-label="Akumulasi Poin" class="col-center">{{ $user->accumulated_points }}</td>
                     @endif
                     <td data-label="{{ $totalLabel }}" class="col-end col-total {{ $loyalty ? $tierClass : '' }}">
                         @if($loyalty)
